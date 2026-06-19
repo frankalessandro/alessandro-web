@@ -69,13 +69,12 @@ const {
       if (canvas instanceof HTMLCanvasElement) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
+          type Tone = 'white' | 'gray' | 'accent';
           interface Star {
             x: number; y: number; r: number; depth: number;
-            baseAlpha: number; twinkleSpeed: number; phase: number; accent: boolean;
-            driftSpeedX: number; driftSpeedY: number;
-            driftPhaseX: number; driftPhaseY: number; driftAmp: number;
-            // flash burst
-            flashNext: number; flashStart: number; flashDur: number;
+            baseAlpha: number; twinkleSpeed: number; phase: number; tone: Tone;
+            // slow glow burst
+            glowNext: number; glowStart: number; glowDur: number;
           }
           let stars: Star[] = [];
           let width = 0, height = 0;
@@ -83,6 +82,13 @@ const {
           let px = 0, py = 0, cx = 0, cy = 0;
 
           const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+          function pickTone(): Tone {
+            const n = Math.random();
+            if (n < 0.35) return 'accent'; // verdes
+            if (n < 0.6) return 'gray';     // grises
+            return 'white';                  // blancas
+          }
 
           function buildStars() {
             const count = Math.min(280, Math.floor((width * height) / 5500));
@@ -92,34 +98,56 @@ const {
               r: rand(0.5, 1.8),
               depth: rand(0.2, 1),
               baseAlpha: rand(0.35, 0.95),
-              twinkleSpeed: rand(0.4, 1.4),
+              twinkleSpeed: rand(0.15, 0.45),
               phase: rand(0, Math.PI * 2),
-              accent: Math.random() < 0.4,
-              // organic drift: each star floats on its own path
-              driftSpeedX: rand(0.04, 0.18),
-              driftSpeedY: rand(0.04, 0.14),
-              driftPhaseX: rand(0, Math.PI * 2),
-              driftPhaseY: rand(0, Math.PI * 2),
-              driftAmp: rand(0.6, 2.2),
-              // flash: first burst after a random delay, then repeats on its own cadence
-              flashNext: rand(1, 12),
-              flashStart: -999,
-              flashDur: 0,
+              tone: pickTone(),
+              // glow: first burst after a short random delay, then repeats on its own cadence
+              glowNext: rand(0.5, 7),
+              glowStart: -999,
+              glowDur: 0,
             }));
           }
 
-          function resize() {
+          let lastW = 0, lastH = 0;
+
+          function applySize() {
             width = window.innerWidth;
             height = window.innerHeight;
             dpr = Math.min(window.devicePixelRatio || 1, 2);
-            canvas.width = width * dpr;
-            canvas.height = height * dpr;
+            canvas.width = Math.round(width * dpr);
+            canvas.height = Math.round(height * dpr);
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          }
+
+          function rebuild() {
+            applySize();
+            lastW = window.innerWidth;
+            lastH = window.innerHeight;
             buildStars();
           }
 
-          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          // Mobile browsers fire `resize` when the URL bar shows/hides while
+          // scrolling — that only changes the height by a small amount. Rebuilding
+          // the field on every such event makes the stars flicker and teleport, so
+          // ignore those: only react to a width change (orientation/resize) or a
+          // large height change. Coalesce bursts of events into one rAF tick.
+          let resizeRaf = 0;
+          function onResize() {
+            if (resizeRaf) return;
+            resizeRaf = requestAnimationFrame(() => {
+              resizeRaf = 0;
+              const w = window.innerWidth, h = window.innerHeight;
+              if (w === lastW && Math.abs(h - lastH) < 120) return;
+              rebuild();
+            });
+          }
 
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          // Touch devices: skip the always-on glow blur (canvas shadowBlur is the
+          // single heaviest per-frame cost on mobile GPUs).
+          const lowPower = window.matchMedia('(pointer: coarse)').matches;
+
+          let rafId = 0;
           const start = performance.now();
           function draw(now: number) {
             const t = (now - start) / 1000;
@@ -128,57 +156,57 @@ const {
             cy += (py - cy) * 0.05;
 
             for (const s of stars) {
-              const twinkle = reduceMotion ? 1 : 0.7 + 0.3 * Math.sin(t * s.twinkleSpeed + s.phase);
+              // slow, gentle twinkle
+              const twinkle = reduceMotion ? 1 : 0.8 + 0.2 * Math.sin(t * s.twinkleSpeed + s.phase);
 
-              // flash burst: schedule next flash, compute instantaneous boost
-              let flashBoost = 0;
+              // glow burst: schedule next glow, compute a slow, smooth boost
+              let glowBoost = 0;
               if (!reduceMotion) {
-                if (t >= s.flashNext) {
-                  s.flashStart = t;
-                  s.flashDur = rand(0.6, 1.2);
-                  // next flash between 6 and 25 seconds later (each star on its own cadence)
-                  s.flashNext = t + rand(6, 25);
+                if (t >= s.glowNext) {
+                  s.glowStart = t;
+                  // slow rise and fall: 2.5–5s per glow
+                  s.glowDur = rand(2.5, 5);
+                  // next glow between 3 and 11 seconds later (each star on its own cadence)
+                  s.glowNext = t + rand(3, 11);
                 }
-                const elapsed = t - s.flashStart;
-                if (elapsed >= 0 && elapsed < s.flashDur) {
+                const elapsed = t - s.glowStart;
+                if (elapsed >= 0 && elapsed < s.glowDur) {
                   // smooth bell curve using sine: gentle rise and fall
-                  const p = elapsed / s.flashDur;
-                  flashBoost = Math.sin(p * Math.PI);
+                  const p = elapsed / s.glowDur;
+                  glowBoost = Math.sin(p * Math.PI);
                 }
               }
 
-              const alpha = Math.min(1, s.baseAlpha * twinkle + flashBoost * (1 - s.baseAlpha));
-              // mouse parallax + organic drift (two desynced sines per axis)
-              const driftX = reduceMotion ? 0 : s.driftAmp * (
-                Math.sin(t * s.driftSpeedX + s.driftPhaseX) +
-                0.4 * Math.sin(t * s.driftSpeedX * 1.7 + s.driftPhaseY)
-              );
-              const driftY = reduceMotion ? 0 : s.driftAmp * (
-                Math.cos(t * s.driftSpeedY + s.driftPhaseY) +
-                0.4 * Math.cos(t * s.driftSpeedY * 2.3 + s.driftPhaseX)
-              );
-              const ox = cx * s.depth * 40 + driftX;
-              const oy = cy * s.depth * 40 + driftY;
-              // flash briefly expands the star radius too
-              const radius = (s.r * (0.6 + s.depth * 0.6)) * (1 + flashBoost * 0.6);
+              const alpha = Math.min(1, s.baseAlpha * twinkle + glowBoost * (1 - s.baseAlpha));
+              // mouse parallax only — no self-drift
+              const ox = cx * s.depth * 40;
+              const oy = cy * s.depth * 40;
+              // glow briefly expands the star radius too
+              const radius = (s.r * (0.6 + s.depth * 0.6)) * (1 + glowBoost * 0.5);
 
-              ctx.shadowBlur = flashBoost > 0.05
-                ? 10 + flashBoost * 14
-                : (s.depth > 0.6 ? 6 : 0);
-              ctx.shadowColor = s.accent ? 'rgba(110,231,183,0.9)' : 'rgba(240,240,240,0.8)';
+              const glowColor =
+                s.tone === 'accent' ? 'rgba(110,231,183,0.9)'
+                : s.tone === 'gray' ? 'rgba(160,160,170,0.8)'
+                : 'rgba(240,240,240,0.8)';
+              ctx.shadowBlur = glowBoost > 0.05
+                ? 8 + glowBoost * 16
+                : (!lowPower && s.depth > 0.6 ? 6 : 0);
+              ctx.shadowColor = glowColor;
 
               ctx.beginPath();
               ctx.arc(s.x + ox, s.y + oy, radius, 0, Math.PI * 2);
-              ctx.fillStyle = s.accent
-                ? `rgba(110,231,183,${alpha})`
+              ctx.fillStyle =
+                s.tone === 'accent' ? `rgba(110,231,183,${alpha})`
+                : s.tone === 'gray' ? `rgba(160,160,170,${alpha})`
                 : `rgba(240,240,240,${alpha})`;
               ctx.fill();
             }
             ctx.shadowBlur = 0;
-            requestAnimationFrame(draw);
+            rafId = requestAnimationFrame(draw);
           }
 
-          window.addEventListener('resize', resize, { passive: true });
+          window.addEventListener('resize', onResize, { passive: true });
+          window.addEventListener('orientationchange', onResize, { passive: true });
           if (!reduceMotion) {
             window.addEventListener('mousemove', (e) => {
               px = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -186,8 +214,18 @@ const {
             }, { passive: true });
           }
 
-          resize();
-          requestAnimationFrame(draw);
+          // Pause the loop while the tab is hidden — saves battery and CPU.
+          document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+              cancelAnimationFrame(rafId);
+              rafId = 0;
+            } else if (!rafId) {
+              rafId = requestAnimationFrame(draw);
+            }
+          });
+
+          rebuild();
+          rafId = requestAnimationFrame(draw);
         }
       }
     </script>

@@ -6,11 +6,6 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
   id="hero"
   class="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
 >
-  <!-- Subtle ambient glow -->
-  <div
-    class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-100 rounded-full pointer-events-none z-0"
-    style="background: radial-gradient(ellipse, rgba(110,231,183,0.06) 0%, transparent 70%);"
-  >
   </div>
 
   <div
@@ -45,41 +40,6 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
         aplicaciones web escalables. Especializado en React, Node.js y APIs
         REST.
       </p>
-
-      <div class="flex flex-wrap gap-3 mb-8">
-        <a
-          href="#projects"
-          data-i18n="hero.cta.projects"
-          class="px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:opacity-85 transition-opacity"
-        >
-          Ver proyectos
-        </a>
-        <a
-          href="#contact"
-          data-i18n="hero.cta.contact"
-          class="px-5 py-2.5 rounded-xl border border-border text-text text-sm font-medium hover:border-accent/50 hover:text-accent transition-colors"
-        >
-          Contacto
-        </a>
-      </div>
-
-      <!-- Tech tags -->
-      <div class="flex flex-wrap gap-2">
-        {
-          [
-            "React",
-            "Node.js",
-            "TypeScript",
-            "PostgreSQL",
-            "Astro",
-            "Docker",
-          ].map((t) => (
-            <span class="text-xs px-3 py-1 rounded border border-border text-muted font-mono hover:border-accent/40 hover:text-accent transition-colors">
-              {t}
-            </span>
-          ))
-        }
-      </div>
     </div>
 
     <!-- Right: avatar placeholder -->
