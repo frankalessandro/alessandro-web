@@ -1,0 +1,43 @@
+---
+const links = [
+  { href: '#hero', label: 'Inicio' },
+  { href: '#about', label: 'Sobre mí' },
+  { href: '#projects', label: 'Proyectos' },
+  { href: '#contact', label: 'Contacto' },
+];
+---
+
+<header
+  id="navbar"
+  class="fixed top-2 left-0 right-0 z-50 flex justify-center px-4"
+>
+  <nav
+    class="flex items-center gap-6 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md bg-bg/75"
+  >
+    <a
+      href="#hero"
+      class="font-mono text-sm font-medium text-accent tracking-wider mr-2"
+    >
+      alf<span class="opacity-50">.</span>dev
+    </a>
+
+    <div class="hidden sm:flex items-center gap-5">
+      {links.map((l) => (
+        <a
+          href={l.href}
+          class="text-sm text-muted hover:text-text transition-colors duration-200 font-medium"
+        >
+          {l.label}
+        </a>
+      ))}
+    </div>
+
+    <a
+      href="/cv.pdf"
+      download
+      class="ml-2 text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
+    >
+      CV ↓
+    </a>
+  </nav>
+</header>

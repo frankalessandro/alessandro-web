@@ -1,0 +1,42 @@
+---
+---
+
+<section id="about" class="px-6 py-24 max-w-5xl mx-auto">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
+    <div>
+      <p class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Sobre mí</p>
+      <h2 class="text-3xl font-black text-text mb-6 tracking-tight">
+        Un poco de<br />mi historia
+      </h2>
+      <div class="space-y-4 text-muted text-sm leading-relaxed">
+        <p>
+          Soy Frank Alessandro Roldan, desarrollador Full Stack de Colombia con más de 3 años de experiencia construyendo aplicaciones web escalables. Trabajo con React, Node.js, PHP y PostgreSQL, con foco en APIs REST, rendimiento e interfaces accesibles.
+        </p>
+        <p>
+          He colaborado con equipos ágiles en proyectos reales que impactan cientos de usuarios, desde sistemas administrativos de gestión hasta plataformas de votación electrónica. Me apasiona el código limpio y el aprendizaje continuo.
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <p class="text-accent font-mono text-xs tracking-widest uppercase">Skills</p>
+
+      {[
+        { label: 'Frontend', items: ['React', 'Astro', 'JavaScript ES6+', 'TypeScript', 'Tailwind CSS', 'Redux', 'Vite'] },
+        { label: 'Backend', items: ['Node.js', 'Express.js', 'PHP (Yii2)', 'PostgreSQL', 'RESTful APIs', 'JWT'] },
+        { label: 'DevOps & Tools', items: ['Docker', 'Git / GitHub', 'CI/CD', 'Jest', 'Linux CLI', 'Jira'] },
+      ].map(({ label, items }) => (
+        <div>
+          <p class="text-text text-xs font-medium mb-2">{label}</p>
+          <div class="flex flex-wrap gap-2">
+            {items.map((i) => (
+              <span class="text-xs px-3 py-1 rounded border border-border text-muted font-mono hover:border-accent/40 hover:text-accent transition-colors">
+                {i}
+              </span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

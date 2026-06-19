@@ -1,0 +1,60 @@
+---
+const projects = [
+  {
+    title: 'ClarBank',
+    description: 'Aplicación bancaria completa con sistema de transacciones, apertura de cuentas y consulta de saldo. Clasificó a nivel departamental y nacional en el XIII Encuentro de Semilleros de Investigación.',
+    tags: ['React', 'Node.js', 'PostgreSQL'],
+    href: '#',
+    repo: '#',
+  },
+  {
+    title: 'VotApp',
+    description: 'Plataforma de votación electrónica con encriptación y validación de identidad. Usada por ~1200 aprendices del CBI Palmira, reduciendo significativamente el tiempo del proceso electoral.',
+    tags: ['Astro', 'PHP', 'Seguridad'],
+    href: '#',
+    repo: '#',
+  },
+  {
+    title: 'SICAM Dashboard',
+    description: 'Módulos core del sistema administrativo de Valle Avanza: radicados, permisos y dashboard data-driven con visualización de métricas en tiempo real.',
+    tags: ['React', 'Chart.js', 'REST APIs'],
+    href: '#',
+    repo: '#',
+  },
+];
+---
+
+<section id="projects" class="px-6 py-24 max-w-5xl mx-auto">
+  <p class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Proyectos</p>
+  <h2 class="text-3xl font-black text-text mb-12 tracking-tight">Lo que he construido</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {projects.map((p) => (
+      <article
+        class="group rounded-xl border border-border bg-bg-2 p-6 flex flex-col gap-4 hover:border-accent/30 transition-colors duration-300"
+      >
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="text-text font-semibold text-base">{p.title}</h3>
+          <div class="flex gap-2 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <a href={p.repo} class="text-muted hover:text-accent text-xs transition-colors" title="Repositorio">
+              gh
+            </a>
+            <a href={p.href} class="text-muted hover:text-accent text-xs transition-colors" title="Demo">
+              ↗
+            </a>
+          </div>
+        </div>
+
+        <p class="text-muted text-sm leading-relaxed flex-1">{p.description}</p>
+
+        <div class="flex flex-wrap gap-2 mt-auto">
+          {p.tags.map((t) => (
+            <span class="text-xs px-2 py-0.5 rounded font-mono text-accent border border-accent/20 bg-accent/5">
+              {t}
+            </span>
+          ))}
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
