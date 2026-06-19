@@ -105,16 +105,21 @@ const panels = (job: (typeof jobs)[number]) => [
 ];
 ---
 
-<section id="experience" class="px-6 py-24 max-w-5xl mx-auto">
-  <p data-i18n="exp.label" class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Experiencia</p>
-  <h2 data-i18n="exp.title" class="text-3xl font-black text-text mb-12 tracking-tight">Dónde he trabajado</h2>
+<section id="experience" class="px-4 sm:px-6 py-28 md:py-40 max-w-5xl mx-auto">
+  <p data-i18n="exp.label" data-anim-head class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Experiencia</p>
+  <h2 data-i18n="exp.title" data-exp-title class="text-3xl font-black text-text mb-12 tracking-tight">Dónde he trabajado</h2>
 
   <div class="flex flex-col items-center gap-12 md:gap-16">
     {jobs.map((job, ji) => (
       <div
         class="exp-reveal w-full md:w-[62%] rounded-2xl"
+        data-exp-card
         data-side={ji % 2 === 0 ? 'left' : 'right'}
+        data-index={ji}
       >
+      <!-- scan line that sweeps across the card during reveal -->
+      <div class="exp-scan-line" aria-hidden="true"></div>
+
       <article
         class="exp-card group relative w-full rounded-2xl border border-border bg-bg-2 overflow-hidden"
       >
@@ -122,17 +127,17 @@ const panels = (job: (typeof jobs)[number]) => [
         <span class="pointer-events-none absolute left-0 top-0 h-full w-px bg-linear-to-b from-transparent via-accent/60 to-transparent scale-y-0 group-hover:scale-y-100 origin-center transition-transform duration-500 ease-out"></span>
 
         <!-- Header -->
-        <div class="px-6 py-5 border-b border-border">
+        <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-border" data-exp-header>
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h3 class="text-text font-semibold text-base tracking-tight">{job.company}</h3>
-              <p class="text-muted text-xs font-mono mt-1">
+              <h3 class="text-text font-semibold text-base tracking-tight" data-exp-company>{job.company}</h3>
+              <p class="text-muted text-xs font-mono mt-1" data-exp-role>
                 <span data-lang="es">{job.role}</span>
                 <span data-lang="en">{job.roleEn}</span>
                 {' · '}{job.period}
               </p>
             </div>
-            <span class="shrink-0 text-[10px] font-mono text-muted/60 border border-border rounded-md px-2 py-1 group-hover:border-accent/30 group-hover:text-accent/70 transition-colors duration-500">
+            <span data-exp-num class="shrink-0 text-[10px] font-mono text-muted/60 border border-border rounded-md px-2 py-1 group-hover:border-accent/30 group-hover:text-accent/70 transition-colors duration-500">
               0{ji + 1}
             </span>
           </div>
@@ -144,7 +149,7 @@ const panels = (job: (typeof jobs)[number]) => [
             <div class="acc">
               <button
                 type="button"
-                class="acc-trigger w-full flex items-center justify-between px-6 py-4 cursor-pointer select-none text-left transition-colors duration-300 hover:bg-white/2.5"
+                class="acc-trigger w-full flex items-center justify-between px-4 sm:px-6 py-4 cursor-pointer select-none text-left transition-colors duration-300 hover:bg-white/2.5"
                 aria-expanded="false"
               >
                 <span class="flex items-center gap-3 text-sm font-medium">
@@ -167,7 +172,7 @@ const panels = (job: (typeof jobs)[number]) => [
               <!-- grid-rows trick for smooth height -->
               <div class="acc-panel grid grid-rows-[0fr] transition-[grid-template-rows] duration-450 ease-in-out">
                 <div class="overflow-hidden">
-                  <div class="px-6 pb-5 pt-1">
+                  <div class="px-4 sm:px-6 pb-5 pt-1">
                     {item.list ? (
                       <>
                         <ul class="space-y-2.5" data-lang="es">
@@ -206,39 +211,38 @@ const panels = (job: (typeof jobs)[number]) => [
 </section>
 
 <style>
+  /* Wrapper clips the scan-line so it never pushes past the card bounds */
+  .exp-reveal { position: relative; overflow: hidden; border-radius: 1rem; }
+
+  /* The scan line that sweeps across the card during reveal.
+     left: 0 is the baseline; GSAP moves it with `x` transform. */
+  .exp-scan-line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(110, 231, 183, 0.9) 40%,
+      rgba(110, 231, 183, 1) 50%,
+      rgba(110, 231, 183, 0.9) 60%,
+      transparent 100%
+    );
+    box-shadow: 0 0 18px 6px rgba(110, 231, 183, 0.55),
+                0 0 40px 12px rgba(110, 231, 183, 0.2);
+    pointer-events: none;
+    z-index: 10;
+    /* GSAP controls position and opacity */
+    opacity: 0;
+  }
+
   .exp-card {
     transition:
       transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
       border-color 0.5s ease,
       box-shadow 0.5s ease;
-  }
-
-  @supports (animation-timeline: view()) {
-    .exp-reveal {
-      animation: card-in-left linear both;
-      animation-timeline: view();
-      animation-range: entry 20% cover 52%;
-      will-change: transform, opacity, filter;
-    }
-    .exp-reveal[data-side='right'] {
-      animation-name: card-in-right;
-    }
-    .exp-reveal:first-child {
-      animation-range: entry 45% cover 62%;
-    }
-  }
-
-  @keyframes card-in-left {
-    0%   { opacity: 0; transform: translate(-130px, 80px) rotate(-5deg) scale(0.87); filter: blur(10px); }
-    45%  { opacity: 1; transform: translate(-50px, 34px) rotate(-2.6deg) scale(0.93); filter: blur(2px); }
-    78%  { opacity: 1; transform: translate(-9px, 7px) rotate(-0.6deg) scale(0.99); filter: blur(0); box-shadow: 0 20px 60px -16px rgba(110, 231, 183, 0.3); }
-    100% { opacity: 1; transform: translate(0, 0) scale(1); filter: blur(0); box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
-  }
-  @keyframes card-in-right {
-    0%   { opacity: 0; transform: translate(130px, 80px) rotate(5deg) scale(0.87); filter: blur(10px); }
-    45%  { opacity: 1; transform: translate(50px, 34px) rotate(2.6deg) scale(0.93); filter: blur(2px); }
-    78%  { opacity: 1; transform: translate(9px, 7px) rotate(0.6deg) scale(0.99); filter: blur(0); box-shadow: 0 20px 60px -16px rgba(110, 231, 183, 0.3); }
-    100% { opacity: 1; transform: translate(0, 0) scale(1); filter: blur(0); box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
   }
 
   .exp-card:hover {
@@ -253,8 +257,7 @@ const panels = (job: (typeof jobs)[number]) => [
   .acc.open .acc-icon { transform: scale(1.15); }
 
   @media (prefers-reduced-motion: reduce) {
-    .exp-reveal { animation: none !important; opacity: 1; transform: none; filter: none; }
-    .acc-panel  { transition: none; }
+    .acc-panel { transition: none; }
   }
 </style>
 

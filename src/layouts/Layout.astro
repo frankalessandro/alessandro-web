@@ -28,15 +28,26 @@ const {
         const l = localStorage.getItem('lang') || 'es';
         document.documentElement.dataset.theme = t;
         document.documentElement.dataset.lang = l;
+        // Mark that JS is running so we can pre-hide GSAP-animated elements
+        // before paint (prevents a flash of content before the intro plays).
+        document.documentElement.classList.add('js-anim');
       })();
     </script>
-    <!-- Fonts -->
+    <!-- Fonts: preconnect first, then load the CSS non-blocking via print→all trick -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <!-- Global starfield -->
@@ -54,6 +65,11 @@ const {
     <slot />
 
     <script>
+      // GSAP animations (hero intro, scroll reveals, parallax, tilt)
+      import '../scripts/animations.ts';
+    </script>
+
+    <script>
       // Scroll progress bar
       const bar = document.getElementById('scroll-progress');
       function updateProgress() {
@@ -65,10 +81,13 @@ const {
       window.addEventListener('scroll', updateProgress, { passive: true });
 
       // Global starfield
-      const canvas = document.getElementById('starfield');
-      if (canvas instanceof HTMLCanvasElement) {
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
+      const canvasEl = document.getElementById('starfield');
+      const ctx2d = canvasEl instanceof HTMLCanvasElement ? canvasEl.getContext('2d') : null;
+      if (canvasEl instanceof HTMLCanvasElement && ctx2d) {
+        // Non-null typed aliases so narrowing survives inside nested functions.
+        const canvas: HTMLCanvasElement = canvasEl;
+        const ctx: CanvasRenderingContext2D = ctx2d;
+        {
           type Tone = 'white' | 'gray' | 'accent';
           interface Star {
             x: number; y: number; r: number; depth: number;
