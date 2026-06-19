@@ -16,7 +16,7 @@
 
 @layer base {
   html {
-    @apply scroll-smooth bg-bg text-text font-sans;
+    @apply scroll-smooth bg-bg text-text font-sans overflow-x-hidden;
   }
   body {
     @apply overflow-x-hidden bg-bg;
@@ -50,3 +50,24 @@
 /* Dual-language content: CSS handles visibility instantly (no JS flash) */
 html[data-lang="es"] [data-lang="en"] { display: none; }
 html[data-lang="en"] [data-lang="es"] { display: none; }
+
+/* Pre-hide the hero elements until the GSAP intro runs, so there's no flash of
+   the final layout before the animation plays. Only when JS is on (js-anim) and
+   the user hasn't asked to reduce motion — otherwise everything stays visible. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim [data-anim-hero] { opacity: 0; }
+  /* Experience content pre-hidden; GSAP reveals per-element during the scan */
+  html.js-anim [data-exp-title] { opacity: 0; }
+  /* About content pre-hidden; GSAP reveals on scroll */
+  html.js-anim [data-anim-about="label"],
+  html.js-anim [data-anim-about="title"],
+  html.js-anim [data-anim-about="para"],
+  html.js-anim [data-anim-about="skill-group"] { opacity: 0; }
+}
+
+/* Navbar condenses into a solid pill once the page is scrolled */
+#nav-pill.nav-scrolled {
+  background-color: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  border-color: rgba(110, 231, 183, 0.18);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.55);
+}

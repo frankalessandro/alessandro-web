@@ -6,19 +6,17 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
   id="hero"
   class="relative min-h-screen flex items-center justify-center px-6 overflow-hidden"
 >
-  </div>
-
   <div
     class="relative z-10 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center pt-20"
   >
     <!-- Left: text -->
     <div>
-      <p data-i18n="hero.available" class="text-accent text-xs font-mono mb-4 tracking-widest uppercase">
+      <p data-i18n="hero.available" data-anim-hero="badge" class="text-accent text-xs font-mono mb-4 tracking-widest uppercase">
         Disponible para trabajar
       </p>
 
       <!-- Typewriter -->
-      <div class="mb-2 h-10 flex items-center">
+      <div data-anim-hero="type" class="mb-2 h-10 flex items-center">
         <span class="font-mono text-muted text-sm">
           <span class="text-accent">&gt;</span>{" "}
         </span>
@@ -29,13 +27,15 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
       </div>
 
       <h1
-        class="text-5xl md:text-6xl font-black tracking-tight text-text leading-tight mb-4"
+        id="hero-name"
+        data-anim-hero="name"
+        class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-text leading-tight mb-4"
       >
         Frank
         <span class="text-accent">Roldan</span>
       </h1>
 
-      <p data-i18n="hero.desc" class="text-muted text-sm max-w-md leading-relaxed mb-8">
+      <p data-i18n="hero.desc" data-anim-hero="desc" class="text-muted text-sm max-w-md leading-relaxed mb-8">
         Desarrollador Full Stack con más de 3 años de experiencia construyendo
         aplicaciones web escalables. Especializado en React, Node.js y APIs
         REST.
@@ -45,6 +45,7 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
     <!-- Right: avatar placeholder -->
     <div class="hidden md:flex justify-center items-center">
       <div
+        data-anim-hero="avatar"
         class="w-64 h-64 rounded-2xl border border-border bg-bg-2 flex items-center justify-center"
       >
         <span class="text-muted font-mono text-xs">[ foto ]</span>
