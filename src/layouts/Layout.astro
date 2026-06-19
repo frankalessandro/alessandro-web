@@ -21,6 +21,15 @@ const {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <!-- Init theme & lang before paint — prevents flash of wrong theme/lang -->
+    <script is:inline>
+      (function () {
+        const t = localStorage.getItem('theme') || 'dark';
+        const l = localStorage.getItem('lang') || 'es';
+        document.documentElement.dataset.theme = t;
+        document.documentElement.dataset.lang = l;
+      })();
+    </script>
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -30,15 +39,22 @@ const {
     />
   </head>
   <body>
+    <!-- Global starfield -->
+    <canvas
+      id="starfield"
+      class="fixed inset-0 w-full h-full pointer-events-none z-0"
+    ></canvas>
+
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
-      class="fixed top-0 left-0 h-0.5 bg-accent z-[9999] transition-[width] duration-[80ms] ease-linear shadow-[0_0_8px_rgba(110,231,183,0.6)] w-0"
+      class="fixed top-0 left-0 h-0.5 bg-accent z-9999 transition-[width] duration-80 ease-linear shadow-[0_0_8px_rgba(110,231,183,0.6)] w-0"
     ></div>
 
     <slot />
 
     <script>
+      // Scroll progress bar
       const bar = document.getElementById('scroll-progress');
       function updateProgress() {
         const scrollTop = window.scrollY;
@@ -47,6 +63,202 @@ const {
         if (bar) bar.style.width = pct + '%';
       }
       window.addEventListener('scroll', updateProgress, { passive: true });
+
+      // Global starfield
+      const canvas = document.getElementById('starfield');
+      if (canvas instanceof HTMLCanvasElement) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          interface Star {
+            x: number; y: number; r: number; depth: number;
+            baseAlpha: number; twinkleSpeed: number; phase: number; accent: boolean;
+            driftSpeedX: number; driftSpeedY: number;
+            driftPhaseX: number; driftPhaseY: number; driftAmp: number;
+            // flash burst
+            flashNext: number; flashStart: number; flashDur: number;
+          }
+          let stars: Star[] = [];
+          let width = 0, height = 0;
+          let dpr = Math.min(window.devicePixelRatio || 1, 2);
+          let px = 0, py = 0, cx = 0, cy = 0;
+
+          const rand = (min: number, max: number) => Math.random() * (max - min) + min;
+
+          function buildStars() {
+            const count = Math.min(280, Math.floor((width * height) / 5500));
+            stars = Array.from({ length: count }, () => ({
+              x: Math.random() * width,
+              y: Math.random() * height,
+              r: rand(0.5, 1.8),
+              depth: rand(0.2, 1),
+              baseAlpha: rand(0.35, 0.95),
+              twinkleSpeed: rand(0.4, 1.4),
+              phase: rand(0, Math.PI * 2),
+              accent: Math.random() < 0.4,
+              // organic drift: each star floats on its own path
+              driftSpeedX: rand(0.04, 0.18),
+              driftSpeedY: rand(0.04, 0.14),
+              driftPhaseX: rand(0, Math.PI * 2),
+              driftPhaseY: rand(0, Math.PI * 2),
+              driftAmp: rand(0.6, 2.2),
+              // flash: first burst after a random delay, then repeats on its own cadence
+              flashNext: rand(1, 12),
+              flashStart: -999,
+              flashDur: 0,
+            }));
+          }
+
+          function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildStars();
+          }
+
+          const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+          const start = performance.now();
+          function draw(now: number) {
+            const t = (now - start) / 1000;
+            ctx.clearRect(0, 0, width, height);
+            cx += (px - cx) * 0.05;
+            cy += (py - cy) * 0.05;
+
+            for (const s of stars) {
+              const twinkle = reduceMotion ? 1 : 0.7 + 0.3 * Math.sin(t * s.twinkleSpeed + s.phase);
+
+              // flash burst: schedule next flash, compute instantaneous boost
+              let flashBoost = 0;
+              if (!reduceMotion) {
+                if (t >= s.flashNext) {
+                  s.flashStart = t;
+                  s.flashDur = rand(0.6, 1.2);
+                  // next flash between 6 and 25 seconds later (each star on its own cadence)
+                  s.flashNext = t + rand(6, 25);
+                }
+                const elapsed = t - s.flashStart;
+                if (elapsed >= 0 && elapsed < s.flashDur) {
+                  // smooth bell curve using sine: gentle rise and fall
+                  const p = elapsed / s.flashDur;
+                  flashBoost = Math.sin(p * Math.PI);
+                }
+              }
+
+              const alpha = Math.min(1, s.baseAlpha * twinkle + flashBoost * (1 - s.baseAlpha));
+              // mouse parallax + organic drift (two desynced sines per axis)
+              const driftX = reduceMotion ? 0 : s.driftAmp * (
+                Math.sin(t * s.driftSpeedX + s.driftPhaseX) +
+                0.4 * Math.sin(t * s.driftSpeedX * 1.7 + s.driftPhaseY)
+              );
+              const driftY = reduceMotion ? 0 : s.driftAmp * (
+                Math.cos(t * s.driftSpeedY + s.driftPhaseY) +
+                0.4 * Math.cos(t * s.driftSpeedY * 2.3 + s.driftPhaseX)
+              );
+              const ox = cx * s.depth * 40 + driftX;
+              const oy = cy * s.depth * 40 + driftY;
+              // flash briefly expands the star radius too
+              const radius = (s.r * (0.6 + s.depth * 0.6)) * (1 + flashBoost * 0.6);
+
+              ctx.shadowBlur = flashBoost > 0.05
+                ? 10 + flashBoost * 14
+                : (s.depth > 0.6 ? 6 : 0);
+              ctx.shadowColor = s.accent ? 'rgba(110,231,183,0.9)' : 'rgba(240,240,240,0.8)';
+
+              ctx.beginPath();
+              ctx.arc(s.x + ox, s.y + oy, radius, 0, Math.PI * 2);
+              ctx.fillStyle = s.accent
+                ? `rgba(110,231,183,${alpha})`
+                : `rgba(240,240,240,${alpha})`;
+              ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+            requestAnimationFrame(draw);
+          }
+
+          window.addEventListener('resize', resize, { passive: true });
+          if (!reduceMotion) {
+            window.addEventListener('mousemove', (e) => {
+              px = (e.clientX / window.innerWidth - 0.5) * 2;
+              py = (e.clientY / window.innerHeight - 0.5) * 2;
+            }, { passive: true });
+          }
+
+          resize();
+          requestAnimationFrame(draw);
+        }
+      }
+    </script>
+
+    <script>
+      // ── i18n + theme toggle ──────────────────────────────────────────────
+
+      interface Tr { es: string; en: string; }
+      type Lang = 'es' | 'en';
+
+      const T: Record<string, Tr> = {
+        'nav.home':       { es: 'Inicio',      en: 'Home' },
+        'nav.about':      { es: 'Sobre mí',    en: 'About' },
+        'nav.experience': { es: 'Experiencia', en: 'Experience' },
+        'nav.projects':   { es: 'Proyectos',   en: 'Projects' },
+        'nav.contact':    { es: 'Contacto',    en: 'Contact' },
+
+        'hero.available':    { es: 'Disponible para trabajar', en: 'Available for work' },
+        'hero.desc':         { es: 'Desarrollador Full Stack con más de 3 años de experiencia construyendo aplicaciones web escalables. Especializado en React, Node.js y APIs REST.', en: 'Full Stack Developer with 3+ years of experience building scalable web applications. Specialized in React, Node.js and REST APIs.' },
+        'hero.cta.projects': { es: 'Ver proyectos', en: 'View projects' },
+        'hero.cta.contact':  { es: 'Contacto',      en: 'Contact' },
+
+        'about.label': { es: 'Sobre mí',                    en: 'About me' },
+        'about.title': { es: 'Un poco de<br />mi historia', en: 'A bit about<br />my story' },
+
+        'contact.label': { es: 'Contacto', en: 'Contact' },
+        'contact.title': { es: 'Hablemos', en: "Let's talk" },
+        'contact.desc':  { es: 'Si tenés un proyecto en mente, una pregunta o simplemente querés conectar — mandame un mensaje.', en: "If you have a project in mind, a question, or just want to connect — send me a message." },
+
+        'exp.label': { es: 'Experiencia',         en: 'Experience' },
+        'exp.title': { es: 'Dónde he trabajado',  en: "Where I've worked" },
+      };
+
+      const SUN  = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+      const MOON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+
+      function applyLang(lang: Lang) {
+        document.documentElement.dataset.lang = lang;
+        localStorage.setItem('lang', lang);
+        document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+          const entry = T[el.dataset.i18n!];
+          if (entry) el.textContent = entry[lang];
+        });
+        document.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
+          const entry = T[el.dataset.i18nHtml!];
+          if (entry) el.innerHTML = entry[lang];
+        });
+        const btn = document.getElementById('lang-toggle');
+        if (btn) btn.textContent = lang === 'es' ? 'EN' : 'ES';
+      }
+
+      function applyTheme(theme: string) {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('theme', theme);
+        const btn = document.getElementById('theme-toggle');
+        if (btn) btn.innerHTML = theme === 'dark' ? SUN : MOON;
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const lang  = (localStorage.getItem('lang')  || 'es') as Lang;
+        const theme =  localStorage.getItem('theme') || 'dark';
+        applyLang(lang);
+        applyTheme(theme);
+
+        document.getElementById('lang-toggle')?.addEventListener('click', () => {
+          applyLang(document.documentElement.dataset.lang === 'es' ? 'en' : 'es');
+        });
+        document.getElementById('theme-toggle')?.addEventListener('click', () => {
+          applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+        });
+      });
     </script>
   </body>
 </html>
