@@ -1,0 +1,286 @@
+---
+const jobs = [
+  {
+    company: 'Valle Avanza',
+    role: 'Desarrollador Frontend',
+    roleEn: 'Frontend Developer',
+    period: 'Jul 2025 – Dic 2025',
+    problem:
+      'El sistema SICAM tenía módulos core deteriorados — radicados, permisos y dashboards con deuda técnica acumulada, procesos administrativos con alta fricción y una arquitectura que no podía escalar a nuevas métricas sin romperse.',
+    problemEn:
+      'The SICAM system had deteriorated core modules — records, permissions and dashboards with accumulated technical debt, high-friction administrative processes, and an architecture that could not scale to new metrics without breaking.',
+    solution:
+      'Refactoricé los módulos core completos, implementé flujos end-to-end con formularios complejos y control dinámico de permisos por estado, construí dashboards data-driven con Chart.js y diseñé un sistema de componentes reutilizables (modales, formularios, layouts) con documentación.',
+    solutionEn:
+      'I fully refactored the core modules, implemented end-to-end flows with complex forms and dynamic permission control by state, built data-driven dashboards with Chart.js, and designed a reusable component system (modals, forms, layouts) with documentation.',
+    results: [
+      'Mantenibilidad y calidad del código en producción notablemente mejoradas.',
+      'Reducción de errores operativos y fricción en procesos administrativos.',
+      'Arquitectura de dashboards preparada para nuevas métricas y fuentes de datos.',
+      'Menor duplicación de código, acelerando el desarrollo de nuevas funcionalidades.',
+    ],
+    resultsEn: [
+      'Noticeably improved maintainability and code quality in production.',
+      'Reduced operational errors and friction in administrative processes.',
+      'Dashboard architecture prepared for new metrics and data sources.',
+      'Less code duplication, accelerating the development of new features.',
+    ],
+  },
+  {
+    company: 'Instituto Colombiano Agropecuario',
+    role: 'Desarrollador de Software',
+    roleEn: 'Software Developer',
+    period: 'Abr 2024 – Oct 2024',
+    problem:
+      'El sistema SIPCO corría sobre una arquitectura PHP/PostgreSQL ineficiente con limitaciones críticas de espacio en servidor y tiempos de carga inaceptables para usuarios rurales con conectividad limitada que gestionaban +100 registros diarios de commodities.',
+    problemEn:
+      'The SIPCO system ran on an inefficient PHP/PostgreSQL architecture with critical server space limitations and unacceptable load times for rural users with limited connectivity who managed 100+ daily commodity records.',
+    solution:
+      'Optimicé la arquitectura backend (PHP Yii2 + PostgreSQL) eliminando cuellos de botella de recursos, desarrollé features end-to-end para el sistema de control de plagas e implementé un pipeline de optimización de imágenes en el flujo de carga.',
+    solutionEn:
+      'I optimized the backend architecture (PHP Yii2 + PostgreSQL) eliminating resource bottlenecks, developed end-to-end features for the pest control system, and implemented an image optimization pipeline in the upload flow.',
+    results: [
+      '60% de reducción en consumo de recursos del servidor, eliminando las limitaciones críticas de espacio.',
+      '40% de mejora en tiempos de carga, impactando directamente la UX en zonas rurales.',
+      'Sistema estable gestionando +100 registros diarios de commodities a nivel nacional.',
+    ],
+    resultsEn: [
+      '60% reduction in server resource consumption, eliminating critical space limitations.',
+      '40% improvement in load times, directly impacting UX in rural areas.',
+      'Stable system managing 100+ daily commodity records nationwide.',
+    ],
+  },
+  {
+    company: 'EstraDigital',
+    role: 'Desarrollador Full Stack',
+    roleEn: 'Full Stack Developer',
+    period: 'May 2023 – May 2024',
+    problem:
+      'Las SPAs carecían de optimización de rendimiento, la autenticación era insegura sin manejo de refresh tokens, no existían componentes reutilizables entre plataformas y las integraciones con APIs externas no tenían manejo de errores robusto.',
+    problemEn:
+      'SPAs lacked performance optimization, authentication was insecure without refresh token handling, no reusable components existed across platforms, and external API integrations had no robust error handling.',
+    solution:
+      'Desarrollé SPAs con React, hooks avanzados, Redux y lazy loading; implementé autenticación JWT completa con refresh tokens y error boundaries; construí una librería de componentes compartidos con React Native e integré APIs REST con retry logic.',
+    solutionEn:
+      'I built SPAs with React, advanced hooks, Redux and lazy loading; implemented full JWT authentication with refresh tokens and error boundaries; built a shared component library with React Native and integrated REST APIs with retry logic.',
+    results: [
+      '35% de mejora en performance mediante lazy loading y optimización de renders.',
+      'Autenticación segura para +50 usuarios activos con manejo robusto de sesiones.',
+      'Reducción del tiempo de desarrollo cross-platform por reutilización de componentes.',
+    ],
+    resultsEn: [
+      '35% performance improvement via lazy loading and render optimization.',
+      'Secure authentication for 50+ active users with robust session management.',
+      'Reduced cross-platform development time through component reuse.',
+    ],
+  },
+  {
+    company: 'Instituto Sistematizado de Educación Empresarial',
+    role: 'Docente de Informática',
+    roleEn: 'Computer Science Teacher',
+    period: 'Abr 2024 – Dic 2024',
+    problem:
+      'Más de 50 estudiantes sin base sólida en herramientas tecnológicas ni en fundamentos de desarrollo de software, con métodos de enseñanza teóricos que no generaban retención práctica.',
+    problemEn:
+      'More than 50 students without a solid foundation in technology tools or software development fundamentals, with theoretical teaching methods that did not generate practical retention.',
+    solution:
+      'Diseñé y dictué un programa con metodología hands-on centrada en proyectos reales, donde los estudiantes construían software desde el primer día en lugar de solo ver teoría.',
+    solutionEn:
+      'I designed and taught a program with a hands-on methodology centered on real projects, where students built software from day one instead of just watching theory.',
+    results: [
+      'Formación efectiva de +50 estudiantes con habilidades técnicas aplicables.',
+      'Mejora medible en retención del conocimiento frente a métodos tradicionales.',
+    ],
+    resultsEn: [
+      'Effective training of 50+ students with applicable technical skills.',
+      'Measurable improvement in knowledge retention compared to traditional methods.',
+    ],
+  },
+];
+
+const panels = (job: (typeof jobs)[number]) => [
+  { icon: '⚠', labelEs: 'Problema', labelEn: 'Problem',   color: 'text-amber-400', dot: 'bg-amber-400', glow: 'rgba(251,191,36,0.5)',   contentEs: job.problem,  contentEn: job.problemEn,  list: false },
+  { icon: '◈', labelEs: 'Solución', labelEn: 'Solution',  color: 'text-accent',    dot: 'bg-accent',    glow: 'rgba(110,231,183,0.5)',  contentEs: job.solution, contentEn: job.solutionEn, list: false },
+  { icon: '↗', labelEs: 'Resultados', labelEn: 'Results', color: 'text-sky-400',   dot: 'bg-sky-400',   glow: 'rgba(56,189,248,0.5)',   contentEs: job.results,  contentEn: job.resultsEn,  list: true  },
+];
+---
+
+<section id="experience" class="px-6 py-24 max-w-5xl mx-auto">
+  <p data-i18n="exp.label" class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Experiencia</p>
+  <h2 data-i18n="exp.title" class="text-3xl font-black text-text mb-12 tracking-tight">Dónde he trabajado</h2>
+
+  <div class="flex flex-col items-center gap-12 md:gap-16">
+    {jobs.map((job, ji) => (
+      <div
+        class="exp-reveal w-full md:w-[62%] rounded-2xl"
+        data-side={ji % 2 === 0 ? 'left' : 'right'}
+      >
+      <article
+        class="exp-card group relative w-full rounded-2xl border border-border bg-bg-2 overflow-hidden"
+      >
+        <!-- accent line that grows on hover -->
+        <span class="pointer-events-none absolute left-0 top-0 h-full w-px bg-linear-to-b from-transparent via-accent/60 to-transparent scale-y-0 group-hover:scale-y-100 origin-center transition-transform duration-500 ease-out"></span>
+
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-border">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h3 class="text-text font-semibold text-base tracking-tight">{job.company}</h3>
+              <p class="text-muted text-xs font-mono mt-1">
+                <span data-lang="es">{job.role}</span>
+                <span data-lang="en">{job.roleEn}</span>
+                {' · '}{job.period}
+              </p>
+            </div>
+            <span class="shrink-0 text-[10px] font-mono text-muted/60 border border-border rounded-md px-2 py-1 group-hover:border-accent/30 group-hover:text-accent/70 transition-colors duration-500">
+              0{ji + 1}
+            </span>
+          </div>
+        </div>
+
+        <!-- Accordions -->
+        <div class="divide-y divide-border/70">
+          {panels(job).map((item) => (
+            <div class="acc">
+              <button
+                type="button"
+                class="acc-trigger w-full flex items-center justify-between px-6 py-4 cursor-pointer select-none text-left transition-colors duration-300 hover:bg-white/2.5"
+                aria-expanded="false"
+              >
+                <span class="flex items-center gap-3 text-sm font-medium">
+                  <span
+                    class={`acc-icon font-mono text-base leading-none ${item.color} transition-transform duration-300`}
+                    style={`text-shadow: 0 0 12px ${item.glow};`}
+                  >
+                    {item.icon}
+                  </span>
+                  <span class={item.color}>
+                    <span data-lang="es">{item.labelEs}</span>
+                    <span data-lang="en">{item.labelEn}</span>
+                  </span>
+                </span>
+                <span class={`acc-chevron flex items-center justify-center w-6 h-6 rounded-full border border-border ${item.color} text-[10px] transition-all duration-300`}>
+                  <span class="block transition-transform duration-300">∨</span>
+                </span>
+              </button>
+
+              <!-- grid-rows trick for smooth height -->
+              <div class="acc-panel grid grid-rows-[0fr] transition-[grid-template-rows] duration-450 ease-in-out">
+                <div class="overflow-hidden">
+                  <div class="px-6 pb-5 pt-1">
+                    {item.list ? (
+                      <>
+                        <ul class="space-y-2.5" data-lang="es">
+                          {(item.contentEs as string[]).map((r) => (
+                            <li class="flex gap-2.5 text-muted text-sm leading-relaxed">
+                              <span class={`${item.color} font-mono mt-0.5 shrink-0`}>→</span>
+                              <span>{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        <ul class="space-y-2.5" data-lang="en">
+                          {(item.contentEn as string[]).map((r) => (
+                            <li class="flex gap-2.5 text-muted text-sm leading-relaxed">
+                              <span class={`${item.color} font-mono mt-0.5 shrink-0`}>→</span>
+                              <span>{r}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <>
+                        <p class="text-muted text-sm leading-relaxed" data-lang="es">{item.contentEs as string}</p>
+                        <p class="text-muted text-sm leading-relaxed" data-lang="en">{item.contentEn as string}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </article>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .exp-card {
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.5s ease,
+      box-shadow 0.5s ease;
+  }
+
+  @supports (animation-timeline: view()) {
+    .exp-reveal {
+      animation: card-in-left linear both;
+      animation-timeline: view();
+      animation-range: entry 20% cover 52%;
+      will-change: transform, opacity, filter;
+    }
+    .exp-reveal[data-side='right'] {
+      animation-name: card-in-right;
+    }
+    .exp-reveal:first-child {
+      animation-range: entry 45% cover 62%;
+    }
+  }
+
+  @keyframes card-in-left {
+    0%   { opacity: 0; transform: translate(-130px, 80px) rotate(-5deg) scale(0.87); filter: blur(10px); }
+    45%  { opacity: 1; transform: translate(-50px, 34px) rotate(-2.6deg) scale(0.93); filter: blur(2px); }
+    78%  { opacity: 1; transform: translate(-9px, 7px) rotate(-0.6deg) scale(0.99); filter: blur(0); box-shadow: 0 20px 60px -16px rgba(110, 231, 183, 0.3); }
+    100% { opacity: 1; transform: translate(0, 0) scale(1); filter: blur(0); box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
+  }
+  @keyframes card-in-right {
+    0%   { opacity: 0; transform: translate(130px, 80px) rotate(5deg) scale(0.87); filter: blur(10px); }
+    45%  { opacity: 1; transform: translate(50px, 34px) rotate(2.6deg) scale(0.93); filter: blur(2px); }
+    78%  { opacity: 1; transform: translate(9px, 7px) rotate(0.6deg) scale(0.99); filter: blur(0); box-shadow: 0 20px 60px -16px rgba(110, 231, 183, 0.3); }
+    100% { opacity: 1; transform: translate(0, 0) scale(1); filter: blur(0); box-shadow: 0 0 0 0 rgba(110, 231, 183, 0); }
+  }
+
+  .exp-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(110, 231, 183, 0.3);
+    box-shadow: 0 14px 50px -14px rgba(110, 231, 183, 0.22);
+  }
+
+  .acc.open .acc-panel  { grid-template-rows: 1fr; }
+  .acc.open .acc-chevron > span { transform: rotate(180deg); }
+  .acc.open .acc-chevron { background-color: rgba(255, 255, 255, 0.03); }
+  .acc.open .acc-icon { transform: scale(1.15); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .exp-reveal { animation: none !important; opacity: 1; transform: none; filter: none; }
+    .acc-panel  { transition: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('#experience .acc').forEach((acc) => {
+    const trigger = acc.querySelector<HTMLButtonElement>('.acc-trigger');
+    trigger?.addEventListener('click', () => {
+      const isOpen = acc.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', String(isOpen));
+    });
+  });
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) continue;
+        entry.target.querySelectorAll<HTMLElement>('.acc.open').forEach((acc) => {
+          acc.classList.remove('open');
+          acc.querySelector<HTMLButtonElement>('.acc-trigger')?.setAttribute('aria-expanded', 'false');
+        });
+      }
+    },
+    { threshold: 0 }
+  );
+
+  document.querySelectorAll<HTMLElement>('#experience .exp-card').forEach((card) => {
+    observer.observe(card);
+  });
+</script>

@@ -1,5 +1,5 @@
 ---
-const roles = ['Full Stack Developer', 'Frontend Developer', 'React & Node.js'];
+const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
 ---
 
 <section
@@ -8,47 +8,55 @@ const roles = ['Full Stack Developer', 'Frontend Developer', 'React & Node.js'];
 >
   <!-- Subtle ambient glow -->
   <div
-    class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-100 rounded-full pointer-events-none"
+    class="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-100 rounded-full pointer-events-none z-0"
     style="background: radial-gradient(ellipse, rgba(110,231,183,0.06) 0%, transparent 70%);"
-  ></div>
+  >
+  </div>
 
-  <div class="relative z-10 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center pt-20">
+  <div
+    class="relative z-10 max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center pt-20"
+  >
     <!-- Left: text -->
     <div>
-      <p class="text-accent text-xs font-mono mb-4 tracking-widest uppercase">
+      <p data-i18n="hero.available" class="text-accent text-xs font-mono mb-4 tracking-widest uppercase">
         Disponible para trabajar
       </p>
 
       <!-- Typewriter -->
       <div class="mb-2 h-10 flex items-center">
         <span class="font-mono text-muted text-sm">
-          <span class="text-accent">&gt;</span>{' '}
+          <span class="text-accent">&gt;</span>{" "}
         </span>
+        <span id="typewriter" class="font-mono text-sm text-text ml-1"></span>
         <span
-          id="typewriter"
-          class="font-mono text-sm text-text ml-1"
+          class="inline-block w-0.5 h-[1em] bg-accent ml-0.5 align-middle animate-[blink_1s_step-end_infinite]"
         ></span>
-        <span class="inline-block w-0.5 h-[1em] bg-accent ml-0.5 align-middle animate-[blink_1s_step-end_infinite]"></span>
       </div>
 
-      <h1 class="text-5xl md:text-6xl font-black tracking-tight text-text leading-tight mb-4">
-        Frank<br />
+      <h1
+        class="text-5xl md:text-6xl font-black tracking-tight text-text leading-tight mb-4"
+      >
+        Frank
         <span class="text-accent">Roldan</span>
       </h1>
 
-      <p class="text-muted text-sm max-w-md leading-relaxed mb-8">
-        Desarrollador Full Stack con más de 3 años de experiencia construyendo aplicaciones web escalables. Especializado en React, Node.js y APIs REST.
+      <p data-i18n="hero.desc" class="text-muted text-sm max-w-md leading-relaxed mb-8">
+        Desarrollador Full Stack con más de 3 años de experiencia construyendo
+        aplicaciones web escalables. Especializado en React, Node.js y APIs
+        REST.
       </p>
 
       <div class="flex flex-wrap gap-3 mb-8">
         <a
           href="#projects"
+          data-i18n="hero.cta.projects"
           class="px-5 py-2.5 rounded-xl bg-accent text-bg text-sm font-semibold hover:opacity-85 transition-opacity"
         >
           Ver proyectos
         </a>
         <a
           href="#contact"
+          data-i18n="hero.cta.contact"
           class="px-5 py-2.5 rounded-xl border border-border text-text text-sm font-medium hover:border-accent/50 hover:text-accent transition-colors"
         >
           Contacto
@@ -57,11 +65,20 @@ const roles = ['Full Stack Developer', 'Frontend Developer', 'React & Node.js'];
 
       <!-- Tech tags -->
       <div class="flex flex-wrap gap-2">
-        {['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'Astro', 'Docker'].map((t) => (
-          <span class="text-xs px-3 py-1 rounded border border-border text-muted font-mono hover:border-accent/40 hover:text-accent transition-colors">
-            {t}
-          </span>
-        ))}
+        {
+          [
+            "React",
+            "Node.js",
+            "TypeScript",
+            "PostgreSQL",
+            "Astro",
+            "Docker",
+          ].map((t) => (
+            <span class="text-xs px-3 py-1 rounded border border-border text-muted font-mono hover:border-accent/40 hover:text-accent transition-colors">
+              {t}
+            </span>
+          ))
+        }
       </div>
     </div>
 
@@ -76,8 +93,9 @@ const roles = ['Full Stack Developer', 'Frontend Developer', 'React & Node.js'];
   </div>
 </section>
 
+
 <script define:vars={{ roles }}>
-  const el = document.getElementById('typewriter');
+  const el = document.getElementById("typewriter");
   let roleIdx = 0;
   let charIdx = 0;
   let deleting = false;
