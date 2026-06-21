@@ -32,20 +32,6 @@
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 4px; }
 
-/* Light theme overrides */
-[data-theme="light"] {
-  --color-bg: #f2f2f2;
-  --color-bg-2: #ffffff;
-  --color-bg-3: #e5e5e5;
-  --color-text: #111111;
-  --color-muted: #555555;
-  --color-border: #d0d0d0;
-  --color-accent: #059669;
-  --color-accent-dim: rgba(5, 150, 105, 0.12);
-}
-
-/* Stars barely visible in light mode (daylight — you can't see stars) */
-[data-theme="light"] #starfield { opacity: 0.06; }
 
 /* Dual-language content: CSS handles visibility instantly (no JS flash) */
 html[data-lang="es"] [data-lang="en"] { display: none; }
