@@ -7,6 +7,86 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(pointer: fine)').matches;
 
+/**
+ * Intro loader: the brand mark's two halves (`<` and `/>`) fly in and assemble,
+ * hold for a beat, then the screen splits down the middle and slides open to
+ * reveal the page. `onDone` fires as the panels part so the hero animates in
+ * behind them. Resolves immediately if the loader markup isn't present.
+ */
+function introLoader(onDone: () => void) {
+  const loader = document.getElementById('intro-loader');
+  if (!loader) { onDone(); return; }
+
+  const left   = loader.querySelector<SVGGElement>('.logo-left');
+  const right  = loader.querySelector<SVGGElement>('.logo-right');
+  const logo   = loader.querySelector<SVGSVGElement>('.intro-logo');
+  const panelL = loader.querySelector<HTMLElement>('.intro-panel-l');
+  const panelR = loader.querySelector<HTMLElement>('.intro-panel-r');
+  const paths  = Array.from(loader.querySelectorAll<SVGPathElement>('.intro-logo path'));
+
+  let revealed = false;
+  const reveal = () => {
+    if (revealed) return;
+    revealed = true;
+    // Let the starfield know it can start drawing now that the overlay is gone.
+    window.dispatchEvent(new Event('intro:done'));
+    onDone();
+  };
+
+  // Safety net: never let the overlay get stuck if the timeline misfires.
+  const safety = window.setTimeout(() => {
+    gsap.set(loader, { display: 'none' });
+    reveal();
+  }, 4000);
+
+  const tl = gsap.timeline({
+    defaults: { ease: 'power3.out', force3D: true },
+    onComplete: () => {
+      window.clearTimeout(safety);
+      gsap.set(loader, { display: 'none' });
+      // Drop the promoted layers once we're done with them.
+      gsap.set([logo, panelL, panelR], { clearProps: 'willChange' });
+    },
+  });
+
+  // Prime each stroke to "undrawn" so the glyph can draw itself on.
+  paths.forEach((p) => {
+    const len = p.getTotalLength() || 100;
+    gsap.set(p, { strokeDasharray: len, strokeDashoffset: len, autoAlpha: 1 });
+  });
+  gsap.set([left, right], { autoAlpha: 1, xPercent: 0 });
+  gsap.set(logo, { scale: 0.82, autoAlpha: 1 });
+
+  // 1. The glyph draws itself, stroke by stroke (`<` → `/` → `>`).
+  tl.to(paths, {
+    strokeDashoffset: 0,
+    duration: 0.55,
+    stagger: 0.13,
+    ease: 'power2.inOut',
+  })
+    .to(logo, { scale: 1, duration: 0.5, ease: 'back.out(2.2)' }, '<0.1')
+
+    // 2. A calm beat — a gentle breath so the mark reads before it leaves.
+    .to(logo, { scale: 1.05, duration: 0.55, ease: 'sine.inOut' }, '+=0.1')
+
+    // 3. Dissolve: the strokes un-draw themselves (a mirror of the entrance),
+    //    last-drawn first, while the mark eases up and out. Striking but sober.
+    .to(paths, {
+      strokeDashoffset: (_i, t) => (t as SVGPathElement).getTotalLength() || 100,
+      duration: 0.5,
+      stagger: { each: 0.09, from: 'end' },
+      ease: 'power2.in',
+    }, '+=0.05')
+    .to(logo, { scale: 1.18, y: -14, autoAlpha: 0, duration: 0.6, ease: 'power2.in' }, '<')
+
+    // 4. The screen tears open as a diagonal shutter.
+    .to(panelL, { xPercent: -32, yPercent: -125, rotate: -7, duration: 0.85, ease: 'power4.inOut' }, '<0.2')
+    .to(panelR, { xPercent: 32, yPercent: 125, rotate: -7, duration: 0.85, ease: 'power4.inOut' }, '<')
+
+    // Reveal the hero just before the panels finish clearing.
+    .add(reveal, '-=0.5');
+}
+
 /** Strong entrance: the name reveals char-by-char, everything else cascades in. */
 function heroIntro() {
   const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -194,7 +274,7 @@ function experienceReveal() {
   const wraps = gsap.utils.toArray<HTMLElement>('[data-exp-card]');
   if (!wraps.length) return;
 
-  // Section title word-by-word reveal
+  // Section title word-by-word reveal (kept split so it can reverse on scroll-up)
   const titleEl = document.querySelector<HTMLElement>('[data-exp-title]');
   if (titleEl) {
     const split = new SplitText(titleEl, { type: 'words' });
@@ -207,8 +287,11 @@ function experienceReveal() {
       stagger: 0.08,
       duration: 0.75,
       ease: 'back.out(1.4)',
-      scrollTrigger: { trigger: titleEl, start: 'top 85%' },
-      onComplete: () => split.revert(),
+      scrollTrigger: {
+        trigger: titleEl,
+        start: 'top 85%',
+        toggleActions: 'play none none reverse',
+      },
     });
   }
 
@@ -244,7 +327,8 @@ function experienceReveal() {
       scrollTrigger: {
         trigger: wrap,
         start: 'top 78%',
-        once: true,
+        toggleActions: 'play none none reverse',
+        onEnter: () => { if (numEl) scrambleText(numEl, finalNum); },
       },
     });
 
@@ -271,10 +355,7 @@ function experienceReveal() {
       .to(role,    { autoAlpha: 1, y: 0, duration: 0.4,  ease: 'power3.out' }, '-=0.38')
       .to(numEl,   { autoAlpha: 1, scale: 1, duration: 0.35, ease: 'back.out(1.8)' }, '-=0.32');
 
-    // 5. Scramble the number badge
-    tl.call(() => { if (numEl) scrambleText(numEl, finalNum); }, [], '-=0.1');
-
-    // 6. Brief green glow pulse on the card border
+    // 5. Brief green glow pulse on the card border (not reversed — glow just fades naturally)
     tl.to(card, {
       boxShadow: '0 0 0 1px rgba(110,231,183,0.7), 0 0 40px -8px rgba(110,231,183,0.5)',
       duration: 0.3,
@@ -295,18 +376,27 @@ function init() {
     gsap.set('.exp-card', { clearProps: 'clip-path' });
   };
 
-  if (reduce) { fallback(); return; }
+  if (reduce) {
+    fallback();
+    // No intro plays under reduced motion — release the starfield right away.
+    window.dispatchEvent(new Event('intro:done'));
+    return;
+  }
 
   try {
-    // Hero + navbar run immediately — they're above the fold and user-visible at once.
-    heroIntro();
+    // Navbar drops in behind the loader; the intro loader plays first and
+    // triggers the hero entrance as the screen splits open.
     navbar();
+    introLoader(heroIntro);
 
     // All scroll-triggered animations are deferred to after load so they don't
     // inflate TBT during the critical rendering path.
     const initScroll = () => {
       try {
         heroParallax();
+        // Cursor-following 3D tilt on the hero avatar (desktop only).
+        const avatar = document.querySelector<HTMLElement>('[data-hero-avatar]');
+        if (avatar && finePointer) tilt(avatar);
         aboutReveal();
         experienceReveal();
         projects();

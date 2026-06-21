@@ -65,6 +65,42 @@ html[data-lang="en"] [data-lang="es"] { display: none; }
   html.js-anim [data-anim-about="skill-group"] { opacity: 0; }
 }
 
+/* ── Intro loader ─────────────────────────────────────────────────────────
+   Hidden by default so no-JS users never see a stuck overlay; the inline head
+   script adds `.js-anim` before paint, which reveals it. GSAP animates it out. */
+#intro-loader { display: none; }
+html.js-anim #intro-loader {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* Reduced motion: skip the whole show. */
+@media (prefers-reduced-motion: reduce) {
+  html.js-anim #intro-loader { display: none; }
+}
+.intro-panel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 51%; /* slight overlap so there's no center seam before they part */
+  background: var(--color-bg);
+  will-change: transform;
+}
+.intro-panel-l { left: 0; }
+.intro-panel-r { right: 0; }
+.intro-logo {
+  position: relative;
+  z-index: 2;
+  width: clamp(96px, 22vw, 184px);
+  height: auto;
+  color: var(--color-accent);
+  will-change: transform, opacity;
+}
+
 /* Navbar condenses into a solid pill once the page is scrolled */
 #nav-pill.nav-scrolled {
   background-color: color-mix(in srgb, var(--color-bg) 92%, transparent);

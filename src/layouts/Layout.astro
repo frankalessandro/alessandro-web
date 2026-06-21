@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Logo from '../components/Logo.astro';
 
 interface Props {
   title?: string;
@@ -21,6 +22,8 @@ const {
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <!-- Always start at the top on load/reload -->
+    <script is:inline>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
     <!-- Init theme & lang before paint — prevents flash of wrong theme/lang -->
     <script is:inline>
       (function () {
@@ -50,6 +53,15 @@ const {
     </noscript>
   </head>
   <body>
+    <!-- Intro loader: the brand mark assembles, then the screen splits open.
+         Shown only when JS is on (html.js-anim) so no-JS users never get a
+         stuck overlay; GSAP removes it once the intro plays. -->
+    <div id="intro-loader" aria-hidden="true">
+      <div class="intro-panel intro-panel-l"></div>
+      <div class="intro-panel intro-panel-r"></div>
+      <Logo class="intro-logo" />
+    </div>
+
     <!-- Global starfield -->
     <canvas
       id="starfield"
@@ -64,9 +76,37 @@ const {
 
     <slot />
 
+    <!-- Back to top button -->
+    <button
+      id="back-to-top"
+      aria-label="Volver arriba"
+      class="fixed bottom-6 right-6 z-50 w-9 h-9 flex items-center justify-center rounded-lg border border-border bg-bg-2/80 backdrop-blur-sm text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 pointer-events-none"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"/>
+      </svg>
+    </button>
+
     <script>
       // GSAP animations (hero intro, scroll reveals, parallax, tilt)
       import '../scripts/animations.ts';
+    </script>
+
+    <script>
+      // Back to top
+      const btt = document.getElementById('back-to-top');
+      function updateBtt() {
+        if (!btt) return;
+        if (window.scrollY > 300) {
+          btt.style.opacity = '1';
+          btt.style.pointerEvents = 'auto';
+        } else {
+          btt.style.opacity = '0';
+          btt.style.pointerEvents = 'none';
+        }
+      }
+      btt?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      window.addEventListener('scroll', updateBtt, { passive: true });
     </script>
 
     <script>
@@ -94,11 +134,22 @@ const {
             baseAlpha: number; twinkleSpeed: number; phase: number; tone: Tone;
             // slow glow burst
             glowNext: number; glowStart: number; glowDur: number;
+            // magnetism: spring displacement + velocity around the resting position
+            vx: number; vy: number; dx: number; dy: number;
           }
           let stars: Star[] = [];
           let width = 0, height = 0;
           let dpr = Math.min(window.devicePixelRatio || 1, 2);
           let px = 0, py = 0, cx = 0, cy = 0;
+          // Actual cursor position in CSS px (for constellation lines + magnetism);
+          // parked off-screen until the first move so nothing connects on load.
+          let mx = -9999, my = -9999;
+          // "Antigravity" hover boost: toggled by [data-particle-hover] enter/leave,
+          // smoothed each frame. Idle = gentle attraction; boosted = repulsion + brighter links.
+          let hoverTarget = 0, hoverCur = 0;
+          // Scroll-warp: streak length tracks scroll speed, direction tracks scroll sign.
+          let lastScrollY = window.scrollY;
+          let warp = 0, warpDir = 1;
 
           const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -124,6 +175,7 @@ const {
               glowNext: rand(0.5, 7),
               glowStart: -999,
               glowDur: 0,
+              vx: 0, vy: 0, dx: 0, dy: 0,
             }));
           }
 
@@ -165,6 +217,9 @@ const {
           // Touch devices: skip the always-on glow blur (canvas shadowBlur is the
           // single heaviest per-frame cost on mobile GPUs).
           const lowPower = window.matchMedia('(pointer: coarse)').matches;
+          // Constellation + magnetism are desktop-only: they need a real cursor and
+          // the per-frame spring/line work isn't worth it on phones.
+          const enableField = !reduceMotion && !lowPower;
 
           let rafId = 0;
           const start = performance.now();
@@ -173,6 +228,21 @@ const {
             ctx.clearRect(0, 0, width, height);
             cx += (px - cx) * 0.05;
             cy += (py - cy) * 0.05;
+
+            // Smooth the hover boost and read scroll velocity for the warp streaks.
+            hoverCur += (hoverTarget - hoverCur) * 0.08;
+            const sy = window.scrollY;
+            const rawVel = sy - lastScrollY;
+            lastScrollY = sy;
+            if (Math.abs(rawVel) > 0.5) warpDir = rawVel > 0 ? 1 : -1;
+            warp += (Math.min(Math.abs(rawVel), 60) - warp) * 0.12;
+
+            // Constellation/magnetism field: radius grows on hover, force flips from
+            // gentle attraction (idle) to repulsion (hover = "antigravity").
+            const fieldR = enableField ? 120 + hoverCur * 90 : 0;
+            const fieldR2 = fieldR * fieldR;
+            const forceSign = -1 + hoverCur * 2;
+            const near: { x: number; y: number; a: number }[] = [];
 
             for (const s of stars) {
               // slow, gentle twinkle
@@ -197,11 +267,41 @@ const {
               }
 
               const alpha = Math.min(1, s.baseAlpha * twinkle + glowBoost * (1 - s.baseAlpha));
-              // mouse parallax only — no self-drift
+              // mouse parallax
               const ox = cx * s.depth * 40;
               const oy = cy * s.depth * 40;
+
+              // Magnetism: each star springs back to its resting position; when the
+              // cursor is within range it's pulled toward (idle) or pushed away (hover).
+              if (enableField) {
+                s.vx += -s.dx * 0.012;
+                s.vy += -s.dy * 0.012;
+                s.vx *= 0.86;
+                s.vy *= 0.86;
+                const cdx = (s.x + ox) - mx;
+                const cdy = (s.y + oy) - my;
+                const cd2 = cdx * cdx + cdy * cdy;
+                if (cd2 < fieldR2 && cd2 > 0.01) {
+                  const cd = Math.sqrt(cd2);
+                  const f = (1 - cd / fieldR) * (0.5 + hoverCur * 1.6) * forceSign;
+                  s.vx += (cdx / cd) * f;
+                  s.vy += (cdy / cd) * f;
+                }
+                s.dx += s.vx;
+                s.dy += s.vy;
+              }
+
+              const rx = s.x + ox + s.dx;
+              const ry = s.y + oy + s.dy;
               // glow briefly expands the star radius too
-              const radius = (s.r * (0.6 + s.depth * 0.6)) * (1 + glowBoost * 0.5);
+              const rad = (s.r * (0.6 + s.depth * 0.6)) * (1 + glowBoost * 0.5);
+
+              // Collect stars within cursor range so we can wire them up afterwards.
+              if (enableField && mx > -9000) {
+                const ldx = rx - mx, ldy = ry - my;
+                const ld2 = ldx * ldx + ldy * ldy;
+                if (ld2 < fieldR2) near.push({ x: rx, y: ry, a: 1 - Math.sqrt(ld2) / fieldR });
+              }
 
               const glowColor =
                 s.tone === 'accent' ? 'rgba(110,231,183,0.9)'
@@ -212,14 +312,64 @@ const {
                 : (!lowPower && s.depth > 0.6 ? 6 : 0);
               ctx.shadowColor = glowColor;
 
-              ctx.beginPath();
-              ctx.arc(s.x + ox, s.y + oy, radius, 0, Math.PI * 2);
-              ctx.fillStyle =
+              const fill =
                 s.tone === 'accent' ? `rgba(110,231,183,${alpha})`
                 : s.tone === 'gray' ? `rgba(160,160,170,${alpha})`
                 : `rgba(240,240,240,${alpha})`;
-              ctx.fill();
+
+              // While scrolling fast, draw the star as a streak; otherwise a dot.
+              if (warp > 1) {
+                const len = Math.min(warp * s.depth * 0.9, 34);
+                ctx.strokeStyle = fill;
+                ctx.lineWidth = rad * 1.4;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(rx, ry);
+                ctx.lineTo(rx, ry + warpDir * len);
+                ctx.stroke();
+              } else {
+                ctx.beginPath();
+                ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+                ctx.fillStyle = fill;
+                ctx.fill();
+              }
             }
+
+            // Constellation lines: link near-cursor stars to each other and to the
+            // cursor. Pairwise is cheap because `near` only holds in-range stars.
+            if (near.length > 1) {
+              ctx.shadowBlur = 0;
+              const linkR2 = fieldR2 * 0.55;
+              for (let i = 0; i < near.length; i++) {
+                const a = near[i];
+                const toCursor = a.a * (0.18 + hoverCur * 0.45);
+                if (toCursor > 0.02) {
+                  ctx.strokeStyle = `rgba(110,231,183,${toCursor})`;
+                  ctx.lineWidth = 0.6 + hoverCur * 0.5;
+                  ctx.beginPath();
+                  ctx.moveTo(a.x, a.y);
+                  ctx.lineTo(mx, my);
+                  ctx.stroke();
+                }
+                for (let j = i + 1; j < near.length; j++) {
+                  const b = near[j];
+                  const dx = a.x - b.x, dy = a.y - b.y;
+                  const dd = dx * dx + dy * dy;
+                  if (dd < linkR2) {
+                    const la = (1 - Math.sqrt(dd) / (fieldR * 0.74)) * Math.min(a.a, b.a) * (0.32 + hoverCur * 0.6);
+                    if (la > 0.02) {
+                      ctx.strokeStyle = `rgba(110,231,183,${la})`;
+                      ctx.lineWidth = 0.6 + hoverCur * 0.5;
+                      ctx.beginPath();
+                      ctx.moveTo(a.x, a.y);
+                      ctx.lineTo(b.x, b.y);
+                      ctx.stroke();
+                    }
+                  }
+                }
+              }
+            }
+
             ctx.shadowBlur = 0;
             rafId = requestAnimationFrame(draw);
           }
@@ -230,7 +380,19 @@ const {
             window.addEventListener('mousemove', (e) => {
               px = (e.clientX / window.innerWidth - 0.5) * 2;
               py = (e.clientY / window.innerHeight - 0.5) * 2;
+              mx = e.clientX;
+              my = e.clientY;
             }, { passive: true });
+            // Cursor left the window — drop the constellation so no lines linger.
+            window.addEventListener('mouseout', (e) => {
+              if (!e.relatedTarget) { mx = -9999; my = -9999; }
+            }, { passive: true });
+            // "Antigravity" hover: tagged elements (project cards, hero avatar) make
+            // the particles behind them light up and push away from the cursor.
+            document.querySelectorAll('[data-particle-hover]').forEach((el) => {
+              el.addEventListener('mouseenter', () => { hoverTarget = 1; });
+              el.addEventListener('mouseleave', () => { hoverTarget = 0; });
+            });
           }
 
           // Pause the loop while the tab is hidden — saves battery and CPU.
@@ -244,7 +406,20 @@ const {
           });
 
           rebuild();
-          rafId = requestAnimationFrame(draw);
+
+          // The intro overlay covers the canvas, so don't burn CPU/GPU drawing
+          // stars behind it — that contention is what makes the intro feel
+          // laggy. Start the loop only once the intro signals it's done (with a
+          // safety fallback in case the signal never arrives).
+          const startLoop = () => { if (!rafId) rafId = requestAnimationFrame(draw); };
+          if (document.documentElement.classList.contains('js-anim')) {
+            let started = false;
+            const go = () => { if (started) return; started = true; startLoop(); };
+            window.addEventListener('intro:done', go, { once: true });
+            window.setTimeout(go, 4200);
+          } else {
+            startLoop();
+          }
         }
       }
     </script>
