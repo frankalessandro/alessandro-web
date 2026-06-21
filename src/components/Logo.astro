@@ -1,0 +1,31 @@
+---
+/**
+ * Brand mark — the `</>` code glyph as a true vector so it recolors freely
+ * (uses currentColor) and stays crisp at any size. Split into two groups
+ * (`logo-left` = `<`, `logo-right` = `/>`) so the intro loader can animate
+ * the halves independently.
+ */
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<svg
+  class={className}
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="2.4"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+>
+  <g class="logo-left">
+    <path d="M6 8 L2 12 L6 16" />
+  </g>
+  <g class="logo-right">
+    <path d="M14.5 4 L9.5 20" />
+    <path d="M18 16 L22 12 L18 8" />
+  </g>
+</svg>

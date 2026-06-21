@@ -1,4 +1,6 @@
 ---
+import Logo from './Logo.astro';
+
 const links = [
   { href: '#hero',       i18n: 'nav.home',       label: 'Inicio' },
   { href: '#about',      i18n: 'nav.about',      label: 'Sobre mí' },
@@ -18,9 +20,10 @@ const links = [
   >
     <a
       href="#hero"
-      class="font-mono text-sm font-medium text-accent tracking-wider mr-2"
+      aria-label="Inicio"
+      class="text-accent mr-2 hover:text-text transition-colors duration-200"
     >
-      alf<span class="opacity-50">.</span>dev
+      <Logo class="w-7 h-7" />
     </a>
 
     <div class="hidden sm:flex items-center gap-5">
@@ -40,7 +43,7 @@ const links = [
       download
       class="ml-2 text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
     >
-      CV ↓
+      CV
     </a>
 
     <!-- Theme & language toggles -->
