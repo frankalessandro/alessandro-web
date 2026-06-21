@@ -161,9 +161,21 @@ const {
           }
 
           function buildStars() {
-            const count = Math.min(280, Math.floor((width * height) / 5500));
-            stars = Array.from({ length: count }, () => ({
-              x: Math.random() * width,
+            const base = Math.floor((width * height) / 5500);
+            const count = Math.min(lowPower ? 280 : 322, lowPower ? base : Math.floor(base * 1.15));
+            stars = Array.from({ length: count }, () => {
+              // Desktop: 60% of stars biased toward the side strips, 40% free.
+              let x: number;
+              if (!lowPower) {
+                const r = Math.random();
+                x = r < 0.30 ? Math.random() * width * 0.22
+                  : r < 0.60 ? width * 0.78 + Math.random() * width * 0.22
+                  : Math.random() * width;
+              } else {
+                x = Math.random() * width;
+              }
+              return {
+              x,
               y: Math.random() * height,
               r: rand(0.5, 1.8),
               depth: rand(0.2, 1),
@@ -176,7 +188,8 @@ const {
               glowStart: -999,
               glowDur: 0,
               vx: 0, vy: 0, dx: 0, dy: 0,
-            }));
+            };
+            });
           }
 
           let lastW = 0, lastH = 0;
@@ -230,7 +243,7 @@ const {
             cy += (py - cy) * 0.05;
 
             // Smooth the hover boost and read scroll velocity for the warp streaks.
-            hoverCur += (hoverTarget - hoverCur) * 0.08;
+            hoverCur += (hoverTarget - hoverCur) * 0.12;
             const sy = window.scrollY;
             const rawVel = sy - lastScrollY;
             lastScrollY = sy;
@@ -339,13 +352,13 @@ const {
             // cursor. Pairwise is cheap because `near` only holds in-range stars.
             if (near.length > 1) {
               ctx.shadowBlur = 0;
-              const linkR2 = fieldR2 * 0.55;
+              const linkR2 = fieldR2 * 0.7;
               for (let i = 0; i < near.length; i++) {
                 const a = near[i];
-                const toCursor = a.a * (0.18 + hoverCur * 0.45);
+                const toCursor = a.a * (0.35 + hoverCur * 0.65);
                 if (toCursor > 0.02) {
                   ctx.strokeStyle = `rgba(110,231,183,${toCursor})`;
-                  ctx.lineWidth = 0.6 + hoverCur * 0.5;
+                  ctx.lineWidth = 0.8 + hoverCur * 1.4;
                   ctx.beginPath();
                   ctx.moveTo(a.x, a.y);
                   ctx.lineTo(mx, my);
@@ -356,10 +369,10 @@ const {
                   const dx = a.x - b.x, dy = a.y - b.y;
                   const dd = dx * dx + dy * dy;
                   if (dd < linkR2) {
-                    const la = (1 - Math.sqrt(dd) / (fieldR * 0.74)) * Math.min(a.a, b.a) * (0.32 + hoverCur * 0.6);
+                    const la = (1 - Math.sqrt(dd) / (fieldR * 0.74)) * Math.min(a.a, b.a) * (0.55 + hoverCur * 0.85);
                     if (la > 0.02) {
                       ctx.strokeStyle = `rgba(110,231,183,${la})`;
-                      ctx.lineWidth = 0.6 + hoverCur * 0.5;
+                      ctx.lineWidth = 0.8 + hoverCur * 1.4;
                       ctx.beginPath();
                       ctx.moveTo(a.x, a.y);
                       ctx.lineTo(b.x, b.y);
