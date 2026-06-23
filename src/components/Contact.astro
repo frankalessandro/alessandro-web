@@ -51,6 +51,33 @@
 
     <!-- Contact form -->
     <form id="contact-form" data-anim-contact class="flex flex-col gap-4">
+
+      <!-- Reason chips -->
+      <div class="flex flex-col gap-2">
+        <span class="font-mono text-xs text-muted tracking-widest uppercase">¿Sobre qué querés hablar?</span>
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Motivo de contacto">
+          {[
+            { value: 'Tengo un proyecto para vos',         emoji: '🚀' },
+            { value: 'Quiero que seas parte de mi equipo', emoji: '🤝' },
+            { value: 'Tengo una pregunta',                 emoji: '💬' },
+            { value: 'Solo quiero decir hola',             emoji: '👋' },
+          ].map(({ value, emoji }, i) => (
+            <label class="reason-chip cursor-pointer">
+              <input
+                type="radio"
+                name="reason"
+                value={value}
+                class="sr-only"
+                checked={i === 0}
+              />
+              <span class="inline-flex items-center gap-1.5 font-mono text-xs px-3 py-1.5 rounded-lg border border-border text-muted transition-colors duration-200 select-none">
+                {emoji} {value}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <div class="flex flex-col gap-1.5">
         <label for="contact-name" class="font-mono text-xs text-muted tracking-widest uppercase">Nombre</label>
         <input
@@ -97,38 +124,76 @@
         Enviar mensaje
       </button>
 
-      <p id="contact-status" class="font-mono text-xs text-muted hidden"></p>
+      <p id="contact-status" class="font-mono text-xs hidden"></p>
     </form>
   </div>
 </section>
 
+<style>
+  .reason-chip input:checked + span {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 40%, transparent);
+    background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  }
+</style>
+
 <script>
-  const form = document.getElementById('contact-form') as HTMLFormElement | null;
-  const submitBtn = document.getElementById('contact-submit') as HTMLButtonElement | null;
-  const status = document.getElementById('contact-status') as HTMLElement | null;
+  const W3F_KEY = 'YOUR_WEB3FORMS_KEY'; // ← reemplazá con tu key de web3forms.com
+
+  const form    = document.getElementById('contact-form')   as HTMLFormElement   | null;
+  const btn     = document.getElementById('contact-submit') as HTMLButtonElement | null;
+  const status  = document.getElementById('contact-status') as HTMLElement       | null;
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!submitBtn || !status) return;
+    if (!btn || !status) return;
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Enviando...';
-    status.classList.add('hidden');
+    const fd      = new FormData(form);
+    const name    = (fd.get('name')    as string).trim();
+    const email   = (fd.get('email')   as string).trim();
+    const message = (fd.get('message') as string).trim();
+    const reason  = (fd.get('reason')  as string) ?? 'Contacto desde portfolio';
 
-    const data = new FormData(form);
-    const name = data.get('name') as string;
-    const email = data.get('email') as string;
-    const message = data.get('message') as string;
+    const subject = `✦ ${name} te escribe — ${reason}`;
 
-    // Opens the default mail client as a reliable fallback
-    const subject = encodeURIComponent(`Contacto desde portfolio — ${name}`);
-    const body = encodeURIComponent(`Nombre: ${name}\nEmail: ${email}\n\n${message}`);
-    window.location.href = `mailto:frank.alessandro.roldan@gmail.com?subject=${subject}&body=${body}`;
+    btn.disabled     = true;
+    btn.textContent  = 'Enviando...';
+    status.className = 'font-mono text-xs hidden';
 
-    submitBtn.disabled = false;
-    submitBtn.textContent = 'Enviar mensaje';
-    status.textContent = '¡Listo! Se abrió tu cliente de correo.';
-    status.classList.remove('hidden');
-    form.reset();
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: W3F_KEY,
+          subject,
+          name,
+          email,
+          message,
+          from_name: name,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        status.textContent  = '✓ Mensaje enviado. Te respondo lo antes posible.';
+        status.className    = 'font-mono text-xs text-accent';
+        form.reset();
+        // reset chip highlight
+        (form.querySelector('input[name="reason"]') as HTMLInputElement | null)
+          ?.closest('.reason-chip')
+          ?.querySelector('input')
+          ?.click();
+      } else {
+        throw new Error(json.message);
+      }
+    } catch {
+      status.textContent = '✕ Algo salió mal. Intentá de nuevo o escribime directo a frank.alessandro.roldan@gmail.com';
+      status.className   = 'font-mono text-xs text-red-400';
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Enviar mensaje';
+    }
   });
 </script>
