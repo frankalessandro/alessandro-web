@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import cvFile from '../assets/CV Frank Roldan 2026.pdf';
 
 const links = [
   { href: '#hero',       i18n: 'nav.home',       label: 'Inicio' },
@@ -14,45 +15,116 @@ const links = [
   id="navbar"
   class="fixed top-2 left-0 right-0 z-50 flex justify-center px-4"
 >
-  <nav
-    id="nav-pill"
-    class="flex items-center gap-6 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md bg-bg/75 transition-[background-color,border-color,box-shadow] duration-300"
-  >
-    <a
-      href="#hero"
-      aria-label="Inicio"
-      class="text-accent mr-2 hover:text-text transition-colors duration-200"
+  <div class="w-full max-w-2xl flex flex-col items-center gap-2">
+    <nav
+      id="nav-pill"
+      class="flex items-center gap-6 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md bg-bg/75 transition-[background-color,border-color,box-shadow] duration-300"
     >
-      <Logo class="w-7 h-7" />
-    </a>
+      <a
+        href="#hero"
+        aria-label="Inicio"
+        class="text-accent mr-2 hover:text-text transition-colors duration-200"
+      >
+        <Logo class="w-7 h-7" />
+      </a>
 
-    <div class="hidden sm:flex items-center gap-5">
-      {links.map((l) => (
-        <a
-          href={l.href}
-          data-i18n={l.i18n}
-          class="text-sm text-muted hover:text-text transition-colors duration-200 font-medium"
-        >
-          {l.label}
-        </a>
-      ))}
+      <div class="hidden sm:flex items-center gap-5">
+        {links.map((l) => (
+          <a
+            href={l.href}
+            data-i18n={l.i18n}
+            class="text-sm text-muted hover:text-text transition-colors duration-200 font-medium"
+          >
+            {l.label}
+          </a>
+        ))}
+      </div>
+
+      <a
+        href={cvFile}
+        download="CV Frank Roldan 2026.pdf"
+        class="ml-2 text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
+      >
+        CV
+      </a>
+
+      <!-- Language toggle -->
+      <button
+        id="lang-toggle"
+        aria-label="Toggle language"
+        class="font-mono text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors duration-200"
+      >
+        EN
+      </button>
+
+      <!-- Hamburger (mobile only) -->
+      <button
+        id="menu-toggle"
+        aria-label="Abrir menú"
+        aria-expanded="false"
+        class="sm:hidden flex flex-col justify-center items-center w-8 h-8 gap-1.5 rounded-lg hover:bg-white/5 transition-colors duration-200"
+      >
+        <span class="hamburger-line block w-5 h-0.5 bg-muted rounded-full transition-all duration-300"></span>
+        <span class="hamburger-line block w-5 h-0.5 bg-muted rounded-full transition-all duration-300"></span>
+        <span class="hamburger-line block w-5 h-0.5 bg-muted rounded-full transition-all duration-300"></span>
+      </button>
+    </nav>
+
+    <!-- Mobile dropdown menu -->
+    <div
+      id="mobile-menu"
+      class="sm:hidden w-full rounded-2xl border border-white/10 backdrop-blur-md bg-bg/90 overflow-hidden
+             max-h-0 opacity-0 pointer-events-none transition-[max-height,opacity] duration-300 ease-in-out"
+    >
+      <div class="flex flex-col px-6 py-4 gap-4">
+        {links.map((l) => (
+          <a
+            href={l.href}
+            data-i18n={l.i18n}
+            class="mobile-nav-link text-sm text-muted hover:text-text transition-colors duration-200 font-medium"
+          >
+            {l.label}
+          </a>
+        ))}
+      </div>
     </div>
-
-    <a
-      href="/cv.pdf"
-      download
-      class="ml-2 text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
-    >
-      CV
-    </a>
-
-    <!-- Language toggle -->
-    <button
-      id="lang-toggle"
-      aria-label="Toggle language"
-      class="font-mono text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors duration-200"
-    >
-      EN
-    </button>
-  </nav>
+  </div>
 </header>
+
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const lines = document.querySelectorAll('.hamburger-line');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+
+    if (isOpen) {
+      menu!.style.maxHeight = '0px';
+      menu!.classList.add('opacity-0', 'pointer-events-none');
+      toggle.setAttribute('aria-expanded', 'false');
+      lines[0]?.classList.remove('translate-y-2', 'rotate-45');
+      lines[1]?.classList.remove('opacity-0');
+      lines[2]?.classList.remove('-translate-y-2', '-rotate-45');
+    } else {
+      menu!.style.maxHeight = menu!.scrollHeight + 'px';
+      menu!.classList.remove('opacity-0', 'pointer-events-none');
+      toggle.setAttribute('aria-expanded', 'true');
+      lines[0]?.classList.add('translate-y-2', 'rotate-45');
+      lines[1]?.classList.add('opacity-0');
+      lines[2]?.classList.add('-translate-y-2', '-rotate-45');
+    }
+  });
+
+  // Close menu when a link is clicked
+  document.querySelectorAll('.mobile-nav-link').forEach((link) => {
+    link.addEventListener('click', () => {
+      menu!.style.maxHeight = '0px';
+      menu!.classList.add('opacity-0', 'pointer-events-none');
+      toggle?.setAttribute('aria-expanded', 'false');
+      lines[0]?.classList.remove('translate-y-2', 'rotate-45');
+      lines[1]?.classList.remove('opacity-0');
+      lines[2]?.classList.remove('-translate-y-2', '-rotate-45');
+    });
+  });
+</script>
