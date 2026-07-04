@@ -44,6 +44,8 @@ html[data-lang="en"] [data-lang="es"] { display: none; }
   html.js-anim [data-anim-hero] { opacity: 0; }
   /* Experience content pre-hidden; GSAP reveals per-element during the scan */
   html.js-anim [data-exp-title] { opacity: 0; }
+  /* Projects title pre-hidden; GSAP does the word reveal */
+  html.js-anim [data-proj-title] { opacity: 0; }
   /* About content pre-hidden; GSAP reveals on scroll */
   html.js-anim [data-anim-about="label"],
   html.js-anim [data-anim-about="title"],
@@ -85,6 +87,38 @@ html.js-anim #intro-loader {
   height: auto;
   color: var(--color-accent);
   will-change: transform, opacity;
+}
+
+/* ── Satellite ping: a ring pulses out of icon chips on hover ───────────── */
+@keyframes ping-ring {
+  from { opacity: 0.7; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(1.9); }
+}
+.icon-ping { position: relative; }
+.icon-ping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(110, 231, 183, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+.icon-ping:hover::after,
+.group:hover .icon-ping::after {
+  animation: ping-ring 0.8s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-ping::after { animation: none !important; }
+}
+
+/* Contact form: the focused field's label lights up and nudges over */
+#contact-form label {
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+#contact-form div:focus-within label {
+  color: var(--color-accent);
+  transform: translateX(4px);
 }
 
 /* Navbar condenses into a solid pill once the page is scrolled */

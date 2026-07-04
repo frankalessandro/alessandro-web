@@ -78,6 +78,7 @@ const {
     <button
       id="back-to-top"
       aria-label="Volver arriba"
+      data-magnetic="0.3"
       class="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-bg-2/80 backdrop-blur-sm text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 pointer-events-none text-xs font-mono"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -149,6 +150,14 @@ const {
           // Scroll-warp: streak length tracks scroll speed, direction tracks scroll sign.
           let lastScrollY = window.scrollY;
           let warp = 0, warpDir = 1;
+          // Shooting stars (ambient, self-scheduled) + click supernovas (an
+          // expanding ring that shoves nearby stars away).
+          interface Meteor { x: number; y: number; vx: number; vy: number; born: number; dur: number; len: number; }
+          interface Shock { x: number; y: number; born: number; }
+          const meteors: Meteor[] = [];
+          const shocks: Shock[] = [];
+          let meteorNext = 0; // scheduled on the draw clock, first one shortly after start
+          let lastT = 0;
 
           const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -248,6 +257,30 @@ const {
             lastScrollY = sy;
             if (Math.abs(rawVel) > 0.5) warpDir = rawVel > 0 ? 1 : -1;
             warp += (Math.min(Math.abs(rawVel), 60) - warp) * 0.12;
+
+            // Frame delta (clamped so a background-tab pause can't teleport meteors).
+            const dt = Math.min(Math.max(t - lastT, 0), 0.05);
+            lastT = t;
+
+            // Ambient shooting star: every so often one streaks across the top half.
+            if (!reduceMotion) {
+              if (meteorNext === 0) meteorNext = t + rand(2, 6);
+              if (t >= meteorNext) {
+                meteorNext = t + rand(5, 12);
+                const fromLeft = Math.random() < 0.5;
+                const speed = rand(520, 820);
+                const ang = fromLeft ? rand(0.25, 0.5) : Math.PI - rand(0.25, 0.5);
+                meteors.push({
+                  x: fromLeft ? rand(-40, width * 0.4) : rand(width * 0.6, width + 40),
+                  y: rand(0, height * 0.45),
+                  vx: Math.cos(ang) * speed,
+                  vy: Math.sin(ang) * speed,
+                  born: t,
+                  dur: rand(0.7, 1.2),
+                  len: rand(70, 140),
+                });
+              }
+            }
 
             // Constellation/magnetism field: radius grows on hover, force flips from
             // gentle attraction (idle) to repulsion (hover = "antigravity").
@@ -383,6 +416,50 @@ const {
             }
 
             ctx.shadowBlur = 0;
+
+            // Meteors: a bright head with a gradient tail that fades in and out.
+            for (let i = meteors.length - 1; i >= 0; i--) {
+              const m = meteors[i];
+              const age = t - m.born;
+              if (age > m.dur) { meteors.splice(i, 1); continue; }
+              m.x += m.vx * dt;
+              m.y += m.vy * dt;
+              const a = Math.sin((age / m.dur) * Math.PI);
+              const sp = Math.hypot(m.vx, m.vy) || 1;
+              const tx = m.x - (m.vx / sp) * m.len;
+              const ty = m.y - (m.vy / sp) * m.len;
+              const grad = ctx.createLinearGradient(m.x, m.y, tx, ty);
+              grad.addColorStop(0, `rgba(240,255,250,${0.9 * a})`);
+              grad.addColorStop(0.25, `rgba(110,231,183,${0.5 * a})`);
+              grad.addColorStop(1, 'rgba(110,231,183,0)');
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = 1.6;
+              ctx.lineCap = 'round';
+              ctx.beginPath();
+              ctx.moveTo(m.x, m.y);
+              ctx.lineTo(tx, ty);
+              ctx.stroke();
+              ctx.fillStyle = `rgba(255,255,255,${a})`;
+              ctx.beginPath();
+              ctx.arc(m.x, m.y, 1.4, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Supernova rings from background clicks.
+            for (let i = shocks.length - 1; i >= 0; i--) {
+              const s = shocks[i];
+              const age = t - s.born;
+              const DUR = 0.8;
+              if (age > DUR) { shocks.splice(i, 1); continue; }
+              const p = age / DUR;
+              const radius = 12 + (1 - Math.pow(1 - p, 3)) * 220;
+              ctx.strokeStyle = `rgba(110,231,183,${0.5 * (1 - p)})`;
+              ctx.lineWidth = 1.5 * (1 - p) + 0.4;
+              ctx.beginPath();
+              ctx.arc(s.x, s.y, radius, 0, Math.PI * 2);
+              ctx.stroke();
+            }
+
             rafId = requestAnimationFrame(draw);
           }
 
@@ -405,6 +482,27 @@ const {
               el.addEventListener('mouseenter', () => { hoverTarget = 1; });
               el.addEventListener('mouseleave', () => { hoverTarget = 0; });
             });
+
+            // Supernova: clicking empty space fires an expanding ring and
+            // shoves nearby stars away (they spring back on their own).
+            window.addEventListener('pointerdown', (e) => {
+              const target = e.target instanceof Element ? e.target : null;
+              if (target && target.closest('a, button, input, textarea, select, label, form, nav')) return;
+              shocks.push({ x: e.clientX, y: e.clientY, born: (performance.now() - start) / 1000 });
+              if (!enableField) return;
+              const R = 240, R2 = R * R;
+              for (const s of stars) {
+                const dx = (s.x + s.dx) - e.clientX;
+                const dy = (s.y + s.dy) - e.clientY;
+                const d2 = dx * dx + dy * dy;
+                if (d2 < R2 && d2 > 1) {
+                  const d = Math.sqrt(d2);
+                  const f = (1 - d / R) * 14;
+                  s.vx += (dx / d) * f;
+                  s.vy += (dy / d) * f;
+                }
+              }
+            }, { passive: true });
           }
 
           // Pause the loop while the tab is hidden — saves battery and CPU.
@@ -463,6 +561,10 @@ const {
 
         'exp.label': { es: 'Experiencia',         en: 'Experience' },
         'exp.title': { es: 'Dónde he trabajado',  en: "Where I've worked" },
+
+        'projects.label': { es: 'Proyectos',            en: 'Projects' },
+        'projects.title': { es: 'Misiones desplegadas', en: 'Deployed missions' },
+        'projects.sub':   { es: 'Proyectos personales, construidos fuera de mi órbita laboral.', en: 'Personal projects, built outside my work orbit.' },
       };
 
       function applyLang(lang: Lang) {

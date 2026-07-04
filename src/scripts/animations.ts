@@ -110,8 +110,8 @@ function heroIntro() {
       stagger: 0.035,
       duration: 0.9,
       ease: 'back.out(1.6)',
-      // restore clean DOM once the flourish is done
-      onComplete: () => split.revert(),
+      // restore clean DOM once the flourish is done, then arm the hover gravity
+      onComplete: () => { split.revert(); heroNameHover(); },
     }, '-=0.2');
   }
 
@@ -167,20 +167,230 @@ function tilt(card: HTMLElement) {
   card.addEventListener('mouseleave', () => { rx(0); ry(0); });
 }
 
-/** Strong: project cards rise and scale in as a stagger; tilt on hover. */
+/**
+ * Hover gravity on the hero name: each character is a tiny body with mass —
+ * chars near the cursor lift and tilt away, then spring back. Char centers
+ * are measured at rest on mouseenter so the effect never feedback-wobbles.
+ */
+function heroNameHover() {
+  if (!finePointer || reduce) return;
+  const name = document.querySelector<HTMLElement>('#hero-name');
+  if (!name) return;
+
+  const split = new SplitText(name, { type: 'chars' });
+  const chars = split.chars as HTMLElement[];
+  const bodies = chars.map((c) => ({
+    y: gsap.quickTo(c, 'y', { duration: 0.35, ease: 'power3.out' }),
+    r: gsap.quickTo(c, 'rotation', { duration: 0.45, ease: 'power3.out' }),
+    cx: 0,
+    cy: 0,
+  }));
+
+  const measure = () => {
+    chars.forEach((c, i) => {
+      const rect = c.getBoundingClientRect();
+      bodies[i].cx = rect.left + rect.width / 2;
+      bodies[i].cy = rect.top + rect.height / 2;
+    });
+  };
+
+  const RADIUS = 130;
+  name.addEventListener('mouseenter', measure);
+  name.addEventListener('mousemove', (e) => {
+    for (const b of bodies) {
+      const dx = b.cx - e.clientX;
+      const d = Math.hypot(dx, b.cy - e.clientY);
+      if (d < RADIUS) {
+        const f = 1 - d / RADIUS;
+        b.y(-f * 24);
+        b.r((dx >= 0 ? 1 : -1) * f * 9);
+      } else {
+        b.y(0);
+        b.r(0);
+      }
+    }
+  });
+  name.addEventListener('mouseleave', () => {
+    for (const b of bodies) { b.y(0); b.r(0); }
+  });
+}
+
+/** Magnetic pull: tagged controls lean toward the cursor and ease back on leave. */
+function magnetics() {
+  if (!finePointer) return;
+  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
+    const strength = parseFloat(el.dataset.magnetic || '') || 0.35;
+    const xTo = gsap.quickTo(el, 'x', { duration: 0.4, ease: 'power3.out' });
+    const yTo = gsap.quickTo(el, 'y', { duration: 0.4, ease: 'power3.out' });
+    el.addEventListener('mousemove', (e) => {
+      const r = el.getBoundingClientRect();
+      xTo((e.clientX - (r.left + r.width / 2)) * strength);
+      yTo((e.clientY - (r.top + r.height / 2)) * strength);
+    });
+    el.addEventListener('mouseleave', () => { xTo(0); yTo(0); });
+  });
+}
+
+/**
+ * Scroll-velocity skew: cards shear a few degrees in the direction of fast
+ * scrolling and settle back with an ease — the page feels like it has inertia.
+ */
+function scrollSkew() {
+  const targets = gsap.utils.toArray<HTMLElement>('[data-project-card], .exp-card');
+  if (!targets.length) return;
+  gsap.set(targets, { transformOrigin: '50% 50%' });
+
+  const proxy = { skew: 0 };
+  const setter = gsap.quickSetter(targets, 'skewY', 'deg');
+  const clamp = gsap.utils.clamp(-3, 3);
+
+  ScrollTrigger.create({
+    onUpdate(self) {
+      const skew = clamp(self.getVelocity() / -450);
+      // Only re-kick the settle tween when the new impulse is stronger.
+      if (Math.abs(skew) > Math.abs(proxy.skew)) {
+        proxy.skew = skew;
+        gsap.to(proxy, {
+          skew: 0,
+          duration: 0.7,
+          ease: 'power3',
+          overwrite: true,
+          onUpdate: () => setter(proxy.skew),
+        });
+      }
+    },
+  });
+}
+
+/**
+ * Scrambles a mission code (e.g. "MSN-03") through random glyphs before
+ * settling on the real value — a tiny "decrypting telemetry" beat.
+ */
+function scrambleCode(el: HTMLElement, final: string, frames = 14) {
+  const glyphs = 'ABCDEFGHIKMNSTVX0123456789-·';
+  let f = 0;
+  const id = setInterval(() => {
+    if (f++ >= frames) { el.textContent = final; clearInterval(id); return; }
+    el.textContent = Array.from(final, () =>
+      glyphs[Math.floor(Math.random() * glyphs.length)]
+    ).join('');
+  }, 40);
+}
+
+/**
+ * The projects "mission log" choreography:
+ * 1. Section title does a SplitText word reveal (mirrors the other sections).
+ * 2. Cards drop out of hyperspace: they fly in from deep z-space, blurred,
+ *    and snap into focus with a stagger.
+ * 3. As each card lands, its constellation draws itself stroke-by-stroke and
+ *    its mission code scrambles into place.
+ * 4. After landing, every card floats in zero-g (slow yoyo drift, each with
+ *    its own period so the grid never moves in lockstep).
+ * 5. Hover: 3D tilt + a glow that tracks the cursor via CSS vars.
+ */
 function projects() {
   const cards = gsap.utils.toArray<HTMLElement>('[data-project-card]');
   if (!cards.length) return;
-  gsap.from(cards, {
-    y: 60,
-    autoAlpha: 0,
-    scale: 0.96,
-    duration: 0.7,
-    ease: 'power3.out',
-    stagger: 0.12,
-    scrollTrigger: { trigger: '#projects', start: 'top 75%' },
+
+  // Title word reveal
+  const titleEl = document.querySelector<HTMLElement>('[data-proj-title]');
+  if (titleEl) {
+    const split = new SplitText(titleEl, { type: 'words' });
+    gsap.set(titleEl, { autoAlpha: 1 });
+    gsap.from(split.words, {
+      yPercent: 110,
+      autoAlpha: 0,
+      rotateX: -60,
+      transformOrigin: '50% 100%',
+      stagger: 0.08,
+      duration: 0.75,
+      ease: 'back.out(1.4)',
+      scrollTrigger: {
+        trigger: titleEl,
+        start: 'top 85%',
+        toggleActions: 'play none none reverse',
+      },
+    });
+  }
+
+  // Depth of field for the hyperspace entrance
+  const grid = document.querySelector<HTMLElement>('#projects .proj-grid');
+  if (grid) gsap.set(grid, { perspective: 900 });
+
+  // Prime each constellation to "undrawn" (same dash trick as the intro logo)
+  cards.forEach((card) => {
+    card.querySelectorAll<SVGPathElement>('.proj-constellation path').forEach((p) => {
+      const len = p.getTotalLength() || 120;
+      gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
+    });
+    gsap.set(card.querySelectorAll('.proj-constellation circle'), { scale: 0, transformOrigin: '50% 50%' });
   });
-  if (finePointer) cards.forEach(tilt);
+
+  // 2. Hyperspace drop-in
+  gsap.from(cards, {
+    z: -420,
+    y: 80,
+    rotationX: 18,
+    autoAlpha: 0,
+    filter: 'blur(10px)',
+    duration: 0.9,
+    ease: 'power3.out',
+    stagger: 0.1,
+    scrollTrigger: { trigger: '#projects', start: 'top 72%' },
+    onComplete: () => {
+      // Drop the blur rasterization cost and start the zero-g drift.
+      gsap.set(cards, { clearProps: 'filter' });
+      cards.forEach((card, i) => {
+        gsap.to(card, {
+          y: '+=7',
+          duration: 2.4 + (i % 3) * 0.5,
+          yoyo: true,
+          repeat: -1,
+          ease: 'sine.inOut',
+          delay: i * 0.25,
+        });
+      });
+    },
+  });
+
+  // 3. Per-card: constellation draw + code scramble as each one enters view
+  cards.forEach((card) => {
+    const codeEl = card.querySelector<HTMLElement>('[data-proj-code]');
+    const finalCode = codeEl?.textContent?.trim() ?? '';
+    const lines = card.querySelectorAll<SVGPathElement>('.proj-constellation path');
+    const stars = card.querySelectorAll('.proj-constellation circle');
+
+    ScrollTrigger.create({
+      trigger: card,
+      start: 'top 85%',
+      once: true,
+      onEnter: () => {
+        if (codeEl) scrambleCode(codeEl, finalCode);
+        gsap.to(lines, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut', delay: 0.35 });
+        gsap.to(stars, {
+          scale: 1,
+          duration: 0.4,
+          stagger: 0.12,
+          ease: 'back.out(2.5)',
+          delay: 0.3,
+        });
+      },
+    });
+  });
+
+  // 5. Desktop hover: 3D tilt + cursor-tracking glow
+  if (finePointer) {
+    cards.forEach((card) => {
+      tilt(card);
+      const setX = gsap.quickSetter(card, '--mx', 'px');
+      const setY = gsap.quickSetter(card, '--my', 'px');
+      card.addEventListener('mousemove', (e) => {
+        const r = card.getBoundingClientRect();
+        setX(e.clientX - r.left);
+        setY(e.clientY - r.top);
+      });
+    });
+  }
 }
 
 /** About section: label → title word reveal → paragraphs stagger → skills stagger. */
@@ -209,15 +419,29 @@ function aboutReveal() {
       }, '-=0.25');
   }
 
-  tl.fromTo('[data-anim-about="para"]',
-    { y: 22, autoAlpha: 0 },
-    { y: 0, autoAlpha: 1, duration: 0.5, stagger: 0.1 },
-    '-=0.35');
-
   tl.fromTo('[data-anim-about="skill-group"]',
     { x: 30, autoAlpha: 0 },
     { x: 0, autoAlpha: 1, duration: 0.5, stagger: 0.12 },
-    '-=0.65');
+    '-=0.3');
+}
+
+/**
+ * About paragraphs read like a scrubbed transmission: every word starts faint
+ * and brightens to full as it crosses the viewport, tied 1:1 to the scroll.
+ */
+function aboutScrubWords() {
+  gsap.utils.toArray<HTMLElement>('[data-anim-about="para"]').forEach((p) => {
+    const split = new SplitText(p, { type: 'words' });
+    gsap.set(p, { autoAlpha: 1 });
+    gsap.fromTo(split.words,
+      { opacity: 0.12 },
+      {
+        opacity: 1,
+        stagger: 0.08,
+        ease: 'none',
+        scrollTrigger: { trigger: p, start: 'top 85%', end: 'top 40%', scrub: 0.5 },
+      });
+  });
 }
 
 /** Subtle: contact links slide in one after another. */
@@ -371,7 +595,7 @@ function experienceReveal() {
 
 function init() {
   const fallback = () => {
-    gsap.set('[data-anim-hero],[data-anim-about],[data-exp-company],[data-exp-role],[data-exp-num]',
+    gsap.set('[data-anim-hero],[data-anim-about],[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
       { clearProps: 'all' });
     gsap.set('.exp-card', { clearProps: 'clip-path' });
   };
@@ -398,10 +622,13 @@ function init() {
         const avatar = document.querySelector<HTMLElement>('[data-hero-avatar]');
         if (avatar && finePointer) tilt(avatar);
         aboutReveal();
+        aboutScrubWords();
         experienceReveal();
         projects();
         contactReveal();
         sectionHeads();
+        scrollSkew();
+        magnetics();
         ScrollTrigger.refresh();
         if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());
       } catch (err) {
