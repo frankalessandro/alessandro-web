@@ -7,7 +7,7 @@
   --color-accent: #6ee7b7;
   --color-accent-dim: rgba(110, 231, 183, 0.15);
   --color-text: #f0f0f0;
-  --color-muted: #6b7280;
+  --color-muted: #8b93a1;
   --color-border: #222222;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -44,16 +44,20 @@ html[data-lang="en"] [data-lang="es"] { display: none; }
   html.js-anim [data-anim-hero] { opacity: 0; }
   /* Experience content pre-hidden; GSAP reveals per-element during the scan */
   html.js-anim [data-exp-title] { opacity: 0; }
-  /* About content pre-hidden; GSAP reveals on scroll */
-  html.js-anim [data-anim-about="label"],
-  html.js-anim [data-anim-about="title"],
-  html.js-anim [data-anim-about="para"],
-  html.js-anim [data-anim-about="skill-group"] { opacity: 0; }
+  /* Projects title pre-hidden; GSAP does the word reveal */
+  html.js-anim [data-proj-title] { opacity: 0; }
+  /* About section pre-hidden; GSAP reveals the whole block at once */
+  html.js-anim #about { opacity: 0; }
 }
 
 /* ── Intro loader ─────────────────────────────────────────────────────────
    Hidden by default so no-JS users never see a stuck overlay; the inline head
-   script adds `.js-anim` before paint, which reveals it. GSAP animates it out. */
+   script adds `.js-anim` before paint, which reveals it.
+
+   Everything here animates via pure CSS from the first paint — the glyph
+   draws itself, the caret blinks, the progress fills — so the loader is never
+   a frozen frame while the JS bundle is still downloading. GSAP only handles
+   the exit. */
 #intro-loader { display: none; }
 html.js-anim #intro-loader {
   display: flex;
@@ -68,23 +72,290 @@ html.js-anim #intro-loader {
 @media (prefers-reduced-motion: reduce) {
   html.js-anim #intro-loader { display: none; }
 }
-.intro-panel {
+.intro-veil {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 51%; /* slight overlap so there's no center seam before they part */
+  inset: 0;
   background: var(--color-bg);
   will-change: transform;
 }
-.intro-panel-l { left: 0; }
-.intro-panel-r { right: 0; }
-.intro-logo {
+/* Accent hairline on the veil's bottom edge — reads as a base line while
+   loading, and becomes the sweep's leading edge when the veil exits upward. */
+.intro-veil::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(110, 231, 183, 0.55), transparent);
+}
+.intro-content {
   position: relative;
   z-index: 2;
-  width: clamp(96px, 22vw, 184px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  will-change: transform, opacity;
+  animation: intro-pop 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes intro-pop {
+  from { transform: scale(0.9); opacity: 0; }
+}
+.intro-mark {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2.4vw, 18px);
+}
+.intro-logo {
+  width: clamp(84px, 18vw, 150px);
   height: auto;
   color: var(--color-accent);
-  will-change: transform, opacity;
+  filter: drop-shadow(0 0 18px rgba(110, 231, 183, 0.35));
+}
+/* The glyph draws itself stroke by stroke (`<` → `/` → `>`). The paths carry
+   pathLength="24" so one dash value fits all three. */
+.intro-logo path {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: intro-draw 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+.intro-logo .logo-right path:nth-child(1) { animation-delay: 0.14s; }
+.intro-logo .logo-right path:nth-child(2) { animation-delay: 0.28s; }
+@keyframes intro-draw {
+  to { stroke-dashoffset: 0; }
+}
+/* Terminal block cursor blinking beside the glyph. */
+.intro-caret {
+  width: clamp(9px, 1.8vw, 14px);
+  height: clamp(26px, 6vw, 46px);
+  background: var(--color-accent);
+  border-radius: 2px;
+  opacity: 0.85;
+  animation: blink 1.1s steps(2, start) infinite;
+  animation-delay: 0.5s;
+}
+/* Progress line: CSS carries it to ~82% on its own; GSAP snaps it to 100%
+   the instant the bundle is ready — real perceived progress, no fakery loop. */
+.intro-progress {
+  width: clamp(140px, 26vw, 220px);
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(110, 231, 183, 0.12);
+  overflow: hidden;
+}
+.intro-progress-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  box-shadow: 0 0 12px rgba(110, 231, 183, 0.6);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  animation: intro-load 1.1s cubic-bezier(0.3, 0.8, 0.4, 1) forwards;
+}
+@keyframes intro-load {
+  to { transform: scaleX(0.82); }
+}
+
+/* ── Reticle hover: HUD corner brackets lock onto the control ─────────────
+   Two targeting corners snap outward from the center with a springy ease and
+   the control lifts 1px — reads as "target acquired". Pure CSS, transform +
+   opacity only, and it doubles as a keyboard focus affordance. */
+.btn-reticle {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+.btn-reticle:hover,
+.btn-reticle:focus-visible {
+  transform: translateY(-1px);
+}
+.btn-reticle::before,
+.btn-reticle::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--color-accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-reticle::before {
+  top: -5px;
+  left: -5px;
+  border-right: 0;
+  border-bottom: 0;
+  border-top-left-radius: 5px;
+  transform: translate(7px, 7px);
+}
+.btn-reticle::after {
+  bottom: -5px;
+  right: -5px;
+  border-left: 0;
+  border-top: 0;
+  border-bottom-right-radius: 5px;
+  transform: translate(-7px, -7px);
+}
+.btn-reticle:hover::before,
+.btn-reticle:focus-visible::before,
+.btn-reticle:hover::after,
+.btn-reticle:focus-visible::after {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-reticle,
+  .btn-reticle::before,
+  .btn-reticle::after { transition: none; }
+  .btn-reticle:hover { transform: none; }
+}
+
+/* ── Satellite ping: a ring pulses out of icon chips on hover ───────────── */
+@keyframes ping-ring {
+  from { opacity: 0.7; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(1.9); }
+}
+.icon-ping { position: relative; }
+.icon-ping::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid rgba(110, 231, 183, 0.55);
+  opacity: 0;
+  pointer-events: none;
+}
+.icon-ping:hover::after,
+.group:hover .icon-ping::after {
+  animation: ping-ring 0.8s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-ping::after { animation: none !important; }
+}
+
+/* Contact form: the focused field's label lights up and nudges over */
+#contact-form label {
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+#contact-form div:focus-within label {
+  color: var(--color-accent);
+  transform: translateX(4px);
+}
+
+/* Back-to-top: always carries a faint accent glow so it reads against the
+   starfield instead of blending in; hover deepens it and lifts the button. */
+.back-to-top {
+  box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.22), 0 8px 24px -8px rgba(0, 0, 0, 0.85),
+    0 0 22px -4px rgba(110, 231, 183, 0.5);
+}
+.back-to-top:hover,
+.back-to-top:focus-visible {
+  border-color: rgba(110, 231, 183, 0.85);
+  box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.32), 0 10px 26px -8px rgba(0, 0, 0, 0.85),
+    0 0 30px -2px rgba(110, 231, 183, 0.7);
+}
+
+/* ── Hero photo swap: GitHub avatar crossfades to profile photo ──────────
+   Desktop hovers reveal the "real" photo behind the avatar; touch devices
+   tap to toggle (a pulsing "tap" hint marks the affordance until dismissed). */
+.hero-photo {
+  position: relative;
+  isolation: isolate;
+  outline: none;
+}
+.hero-photo::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  background: radial-gradient(circle at 50% 42%, rgba(110, 231, 183, 0.24), transparent 70%);
+  filter: blur(8px);
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+.hero-photo.is-active::before { opacity: 1; }
+
+.hero-photo-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-2);
+}
+.hero-photo-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 18%;
+}
+.hero-photo-img--profile { opacity: 0; z-index: 2; }
+
+.hero-photo-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-accent);
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 3;
+}
+.hero-photo-corner--tl { top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 6px; }
+.hero-photo-corner--br { bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 6px; }
+.hero-photo.is-active .hero-photo-corner { opacity: 1; }
+
+.hero-photo-tag {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  border: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+/* Touch-only affordance: hidden on devices that actually support hover. */
+.hero-photo-hint {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 4;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  border: 1px solid rgba(110, 231, 183, 0.35);
+  padding: 3px 7px;
+  border-radius: 999px;
+  pointer-events: none;
+  animation: hero-hint-pulse 2.2s ease-in-out infinite;
+}
+@media (hover: hover) {
+  .hero-photo-hint { display: none; }
+}
+.hero-photo.hint-dismissed .hero-photo-hint { opacity: 0; }
+
+@keyframes hero-hint-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-hint { animation: none; }
 }
 
 /* Navbar condenses into a solid pill once the page is scrolled */

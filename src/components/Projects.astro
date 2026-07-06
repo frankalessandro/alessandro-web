@@ -1,62 +1,437 @@
 ---
+/**
+ * Projects — full-bleed showcase deck. One large card per project: screenshot
+ * in a hairline-framed viewport, logo + title, description, stack and links.
+ * On desktop the deck pins and each project hands off to the next with a
+ * line-sweep transition (clip reveal + rolling index) driven by scroll.
+ * Choreography lives in src/scripts/animations.ts (projects()).
+ */
 const projects = [
   {
+    title: 'Polla Mundialista 2026',
+    logo: '/projects/polla-fav.png',
+    shot: '/projects/polla.webp',
+    descEs:
+      'Quiniela para la fase de grupos del Mundial 2026: 72 predicciones por participante, puntos calculados con marcadores reales de TheSportsDB resueltos en build, clasificación con desempates y tablas filtrables. 100% estático.',
+    descEn:
+      'Prediction pool for the 2026 World Cup group stage: 72 picks per participant, points computed from real TheSportsDB scores resolved at build time, tie-break standings and filterable tables. 100% static.',
+    tags: ['Astro', 'TypeScript', 'Tailwind 4', 'TheSportsDB'],
+    repo: 'https://github.com/frankalessandro/polla-mundialista',
+    demo: 'https://polla-mundialista-five-delta.vercel.app/',
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
+    live: false,
+    accent: '#fbbf24',
+  },
+  {
+    title: 'Spa Salud y Vida',
+    logo: '/projects/spa-fav.svg',
+    shot: '/projects/spa.webp',
+    descEs:
+      'Sitio web para un spa y centro de bienestar: presentación de servicios y captación de clientes, construido estático con Astro y desplegado en Vercel.',
+    descEn:
+      'Website for a spa & wellness center: service showcase and client acquisition, statically built with Astro and deployed on Vercel.',
+    tags: ['Astro', 'TypeScript', 'CSS', 'GSAP'],
+    repo: 'https://github.com/frankalessandro/spasaludyvida',
+    demo: 'https://spasaludyvida.vercel.app',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#22d3ee',
+  },
+  {
+    title: 'Felinas Web',
+    logo: '/projects/felinas-fav.svg',
+    shot: '/projects/felinas.webp',
+    descEs:
+      'Sitio oficial de Pantera Felinas, academia de danza urbana femenina: landing con selector de sección, página de academia (estilos, planes, FAQ), sección de shows, animaciones on-scroll y agendamiento por WhatsApp.',
+    descEn:
+      'Official site for Pantera Felinas, a women’s urban dance academy: landing with section selector, academy page (styles, plans, FAQ), shows section, on-scroll animations and WhatsApp booking.',
+    tags: ['Astro 6', 'React', 'Tailwind', 'GSAP'],
+    repo: 'https://github.com/frankalessandro/felinas-web',
+    demo: 'https://felinas-web.vercel.app/',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#a78bfa',
+  },
+  {
+    title: 'Forge',
+    logo: '/projects/forge-fav.svg',
+    shot: '/projects/forge.webp',
+    descEs:
+      'Tracker de entrenamientos de gimnasio, en solitario o en grupo con amigos. Autenticación y datos sobre Supabase (PostgreSQL + RLS), formularios validados con Zod + React Hook Form y estado global con Zustand.',
+    descEn:
+      'Gym workout tracker, solo or in groups with friends. Auth and data on Supabase (PostgreSQL + RLS), forms validated with Zod + React Hook Form and global state with Zustand.',
+    tags: ['React 19', 'Supabase', 'Zustand', 'Tailwind 4'],
+    repo: 'https://github.com/frankalessandro/forge',
+    demo: 'https://forge-phi-five.vercel.app/',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#f97316',
+  },
+  {
     title: 'ClarBank',
-    description: 'Aplicación bancaria completa con sistema de transacciones, apertura de cuentas y consulta de saldo. Clasificó a nivel departamental y nacional en el XIII Encuentro de Semilleros de Investigación.',
-    tags: ['React', 'Node.js', 'PostgreSQL'],
-    href: '#',
-    repo: '#',
+    logo: '/projects/clarbank-fav.svg',
+    shot: '/projects/clarbank.webp',
+    descEs:
+      'Simulador bancario full-stack: roles (director, asesor, cajero, cliente), apertura de cuentas con formularios multi-paso, autorización de solicitudes y módulo de caja. API documentada con Swagger. Clasificó a nivel departamental y nacional en el XIII Encuentro de Semilleros de Investigación.',
+    descEn:
+      'Full-stack banking simulator: roles (director, advisor, teller, client), multi-step account opening, request authorization flows and a cash desk module. Swagger-documented API. Qualified at regional and national level in the XIII Research Incubator Meetup.',
+    tags: ['React', 'Node.js', 'PostgreSQL', 'Swagger'],
+    repo: 'https://github.com/frankalessandro/Simulador_Banca',
+    demo: 'https://clarbank.vercel.app/',
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
+    live: false,
+    accent: '#38bdf8',
   },
   {
     title: 'VotApp',
-    description: 'Plataforma de votación electrónica con encriptación y validación de identidad. Usada por ~1200 aprendices del CBI Palmira, reduciendo significativamente el tiempo del proceso electoral.',
-    tags: ['Astro', 'PHP', 'Seguridad'],
-    href: '#',
-    repo: '#',
-  },
-  {
-    title: 'SICAM Dashboard',
-    description: 'Módulos core del sistema administrativo de Valle Avanza: radicados, permisos y dashboard data-driven con visualización de métricas en tiempo real.',
-    tags: ['React', 'Chart.js', 'REST APIs'],
-    href: '#',
-    repo: '#',
+    logo: '/projects/votapp-fav.svg',
+    shot: '/projects/votapp.webp',
+    descEs:
+      'Plataforma de votación electrónica con validación de identidad, usada por ~1200 aprendices del CBI Palmira. Redujo drásticamente el tiempo del proceso electoral frente al conteo manual.',
+    descEn:
+      'Electronic voting platform with identity validation, used by ~1200 CBI Palmira students. Dramatically reduced election time compared to manual counting.',
+    tags: ['Astro', 'JavaScript', 'Tailwind'],
+    repo: 'https://github.com/frankalessandro/VotApp',
+    demo: 'https://vot-app.vercel.app',
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
+    live: false,
+    accent: '#6ee7b7',
   },
 ];
+
+const total = String(projects.length).padStart(2, '0');
+
+// ── Tech icons ───────────────────────────────────────────────────────────
+// Brand SVGs (simple-icons) inlined at build so each stack tag renders as a
+// monochrome glyph tinted with the project accent instead of plain text.
+// zustand / thesportsdb have no brand mark → hand-drawn fallbacks.
+import astro from '../assets/tech/astro.svg?raw';
+import typescript from '../assets/tech/typescript.svg?raw';
+import javascript from '../assets/tech/javascript.svg?raw';
+import tailwindcss from '../assets/tech/tailwindcss.svg?raw';
+import react from '../assets/tech/react.svg?raw';
+import supabase from '../assets/tech/supabase.svg?raw';
+import zustand from '../assets/tech/zustand.svg?raw';
+import nodedotjs from '../assets/tech/nodedotjs.svg?raw';
+import postgresql from '../assets/tech/postgresql.svg?raw';
+import swagger from '../assets/tech/swagger.svg?raw';
+import css3 from '../assets/tech/css3.svg?raw';
+import thesportsdb from '../assets/tech/thesportsdb.svg?raw';
+import greensock from '../assets/tech/greensock.svg?raw';
+
+const ICONS: Record<string, string> = {
+  astro, typescript, javascript, tailwindcss, react, supabase,
+  zustand, nodedotjs, postgresql, swagger, css3, thesportsdb, greensock,
+};
+
+// map a free-form tag label ("Tailwind 4", "Node.js") to an icon slug
+const SLUG: Record<string, string> = {
+  'astro': 'astro', 'astro 6': 'astro',
+  'typescript': 'typescript',
+  'javascript': 'javascript',
+  'tailwind': 'tailwindcss', 'tailwind 4': 'tailwindcss', 'tailwind css': 'tailwindcss',
+  'react': 'react', 'react 19': 'react',
+  'supabase': 'supabase',
+  'zustand': 'zustand',
+  'node.js': 'nodedotjs', 'nodejs': 'nodedotjs',
+  'postgresql': 'postgresql',
+  'swagger': 'swagger',
+  'css': 'css3',
+  'thesportsdb': 'thesportsdb',
+  'gsap': 'greensock',
+};
+
+const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?? null;
 ---
 
-<section id="projects" class="px-4 sm:px-6 py-28 md:py-40 max-w-5xl mx-auto">
-  <p data-anim-head class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Proyectos</p>
-  <h2 data-anim-head class="text-3xl font-black text-text mb-12 tracking-tight">Lo que he construido</h2>
+<section id="projects" class="relative px-4 sm:px-6 py-28 md:py-40 max-w-6xl mx-auto">
+  <p data-i18n="projects.label" data-anim-head class="relative text-accent font-mono text-xs tracking-widest uppercase mb-3">Proyectos</p>
+  <h2 data-i18n="projects.title" data-proj-title class="relative text-3xl font-black text-text tracking-tight">Trabajo seleccionado</h2>
+  <p data-i18n="projects.sub" data-anim-head class="relative text-muted text-sm mt-3 mb-14 font-mono">
+    Proyectos personales, diseñados y construidos de principio a fin.
+  </p>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    {projects.map((p) => (
-      <article
-        data-project-card
-        data-particle-hover
-        class="group rounded-xl border border-border bg-bg-2 p-5 sm:p-6 flex flex-col gap-4 hover:border-accent/30 transition-colors duration-300"
-      >
-        <div class="flex items-start justify-between gap-2">
-          <h3 class="text-text font-semibold text-base">{p.title}</h3>
-          <div class="flex gap-2 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            <a href={p.repo} class="text-muted hover:text-accent text-xs transition-colors" title="Repositorio">
-              gh
-            </a>
-            <a href={p.href} class="text-muted hover:text-accent text-xs transition-colors" title="Demo">
-              ↗
-            </a>
-          </div>
-        </div>
-
-        <p class="text-muted text-sm leading-relaxed flex-1">{p.description}</p>
-
-        <div class="flex flex-wrap gap-2 mt-auto">
-          {p.tags.map((t) => (
-            <span class="text-xs px-2 py-0.5 rounded font-mono text-accent border border-accent/20 bg-accent/5">
-              {t}
-            </span>
+  <div class="proj-deck relative" data-proj-deck>
+    <!-- rolling index: 01 → 06 -->
+    <div class="proj-counter absolute -top-9 right-0 hidden lg:flex items-baseline gap-1.5 font-mono text-xs tracking-widest text-muted" aria-hidden="true">
+      <span class="proj-counter-viewport">
+        <span class="proj-counter-track" data-proj-count>
+          {projects.map((_, i) => (
+            <span class="proj-counter-item text-text">{String(i + 1).padStart(2, '0')}</span>
           ))}
-        </div>
-      </article>
-    ))}
+        </span>
+      </span>
+      <span class="opacity-60">/ {total}</span>
+    </div>
+
+    <div class="proj-stage relative flex flex-col gap-20 lg:gap-0" data-proj-stage>
+      {projects.map((p, i) => (
+        <article
+          data-proj-slide
+          class="proj-slide grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-14 items-center"
+          style={`--pc: ${p.accent};`}
+        >
+          <!-- ── Info column ─────────────────────────────────────────── -->
+          <div class="proj-info relative order-2 lg:order-1">
+            <!-- index + rule + status: one technical header line -->
+            <div data-proj-el class="relative flex items-center gap-4 mb-6">
+              <span class="proj-logo-tile shrink-0" aria-hidden="true">
+                <img src={p.logo} alt="" width="24" height="24" loading="lazy" class="w-6 h-6 object-contain" />
+              </span>
+              <span class="proj-idx font-mono">{String(i + 1).padStart(2, '0')}</span>
+              <span class="proj-idx-rule" aria-hidden="true"></span>
+              <span class="flex items-center gap-2 font-mono text-[10px] tracking-widest shrink-0">
+                <span class={`proj-status-dot ${p.live ? 'bg-accent' : 'bg-sky-400'}`}></span>
+                <span class={p.live ? 'text-accent/80' : 'text-sky-400/80'}>
+                  <span data-lang="es">{p.statusEs}</span>
+                  <span data-lang="en">{p.statusEn}</span>
+                </span>
+              </span>
+            </div>
+
+            <h3 data-proj-el class="proj-title relative text-text font-black text-3xl sm:text-4xl tracking-tight mb-6">
+              {p.title}
+            </h3>
+
+            <p data-proj-el class="relative text-muted text-sm leading-relaxed mb-6 max-w-prose">
+              <span data-lang="es">{p.descEs}</span>
+              <span data-lang="en">{p.descEn}</span>
+            </p>
+
+            <ul data-proj-el class="proj-tags relative flex flex-wrap gap-2.5 mb-8 font-mono" role="list">
+              {p.tags.map((t) => (
+                <li class="proj-tag" title={t}>
+                  {iconFor(t) && <span class="proj-tag-ico" aria-hidden="true" set:html={iconFor(t)} />}
+                  <span class="proj-tag-label">{t}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div data-proj-el class="relative flex gap-3 font-mono text-xs">
+              <a
+                href={p.repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-reticle px-4 py-2 border border-border rounded text-text hover:border-accent/40 transition-colors"
+                aria-label={`Código de ${p.title} en GitHub`}
+              >
+                <span data-lang="es">Código</span><span data-lang="en">Source</span>
+              </a>
+              {p.demo && (
+                <a
+                  href={p.demo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-reticle px-4 py-2 border border-accent/30 bg-accent/5 rounded text-accent hover:bg-accent/10 transition-colors"
+                  aria-label={`Sitio de ${p.title}`}
+                >
+                  <span data-lang="es">Ver sitio ↗</span><span data-lang="en">Visit site ↗</span>
+                </a>
+              )}
+            </div>
+          </div>
+
+          <!-- ── Screenshot window ───────────────────────────────────── -->
+          <div class="proj-shot-wrap relative order-1 lg:order-2" data-proj-clip data-particle-hover>
+            <figure class="proj-shot relative rounded-lg border border-border bg-bg-2 overflow-hidden">
+              <!-- browser chrome: dots + favicon tab + hairline -->
+              <div class="proj-shot-bar flex items-center gap-1.5 px-3 py-2 border-b border-border">
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-tab ml-3 flex items-center gap-2">
+                  <img src={p.logo} alt="" width="14" height="14" loading="lazy" class="w-3.5 h-3.5 object-contain" />
+                  <span class="font-mono text-[10px] tracking-wide text-muted lowercase">{p.title}</span>
+                </span>
+                <span class="ml-3 flex-1 h-px bg-border"></span>
+              </div>
+              <div class="proj-shot-viewport overflow-hidden">
+                <img
+                  src={p.shot}
+                  alt={`Captura de ${p.title}`}
+                  width="1440"
+                  height="900"
+                  loading="lazy"
+                  data-proj-img
+                  class="w-full h-auto block"
+                />
+              </div>
+              <!-- accent hairlines extending past the frame -->
+              <span class="proj-shot-ext proj-shot-ext-t" aria-hidden="true"></span>
+              <span class="proj-shot-ext proj-shot-ext-b" aria-hidden="true"></span>
+            </figure>
+          </div>
+        </article>
+      ))}
+    </div>
   </div>
 </section>
+
+<style>
+  /* ── Deck / stage ─────────────────────────────────────────────────────
+     With motion + JS the slides stack absolutely and the deck is pinned so
+     each project hands off to the next in place — on mobile too. Under
+     reduced motion (or no JS) they flow as a normal stacked list. */
+  @media (prefers-reduced-motion: no-preference) {
+    html.js-anim .proj-stage {
+      /* one card at a time, centered — sized to leave the card room to breathe
+         within the pinned viewport (svh accounts for mobile browser chrome) */
+      height: min(88vh, 680px);
+      height: min(88svh, 680px);
+      display: block;
+    }
+    html.js-anim .proj-slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+    }
+    /* only the first slide is visible until GSAP takes over */
+    html.js-anim .proj-slide:not(:first-child) { opacity: 0; }
+  }
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    html.js-anim .proj-stage {
+      height: min(72vh, 620px);
+    }
+  }
+
+  /* ── Rolling counter ──────────────────────────────────────────────────── */
+  .proj-counter-viewport {
+    display: inline-block;
+    height: 1em;
+    line-height: 1;
+    overflow: hidden;
+  }
+  .proj-counter-track { display: block; }
+  .proj-counter-item { display: block; height: 1em; line-height: 1; }
+
+  /* ── Info column chrome ──────────────────────────────────────────────── */
+  /* index: solid mono digits in the project's accent, sitting on a hairline
+     rule that fades toward the status readout */
+  .proj-idx {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--pc) 85%, white);
+    text-shadow: 0 0 22px color-mix(in srgb, var(--pc) 45%, transparent);
+  }
+  .proj-idx-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--pc) 55%, transparent),
+      color-mix(in srgb, var(--pc) 12%, transparent)
+    );
+  }
+  /* title carries a short accent bar underneath — the section's signature line */
+  .proj-title { padding-bottom: 0.9rem; }
+  .proj-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 3rem;
+    height: 2px;
+    background: var(--pc);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 60%, transparent);
+  }
+  /* tags: technical chips — brand SVG glyph + mono label, accent-tinted icon */
+  .proj-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.32rem 0.6rem 0.32rem 0.5rem;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--pc) 4%, transparent);
+    transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
+  }
+  .proj-tag:hover {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--pc) 40%, transparent);
+    background: color-mix(in srgb, var(--pc) 9%, transparent);
+  }
+  .proj-tag-ico {
+    display: inline-flex;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: color-mix(in srgb, var(--pc) 82%, white);
+  }
+  .proj-tag-ico :global(svg) {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+  .proj-tag-label { line-height: 1; }
+
+  /* project logo reused as a framed tile in the info header */
+  .proj-logo-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--pc) 30%, transparent);
+    background: color-mix(in srgb, var(--pc) 7%, transparent);
+    box-shadow: 0 0 18px -6px color-mix(in srgb, var(--pc) 45%, transparent);
+  }
+  .proj-status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    animation: blink 1.6s ease-in-out infinite;
+  }
+
+  /* ── Screenshot frame ────────────────────────────────────────────────── */
+  .proj-shot {
+    box-shadow: 0 24px 80px -24px color-mix(in srgb, var(--pc) 25%, transparent);
+    transition: border-color 0.4s ease;
+  }
+  .proj-slide:hover .proj-shot {
+    border-color: color-mix(in srgb, var(--pc) 40%, transparent);
+  }
+  .proj-shot-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--pc) 55%, transparent);
+  }
+  /* favicon "tab" in the window bar */
+  .proj-shot-tab {
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--pc) 22%, transparent);
+    background: color-mix(in srgb, var(--pc) 6%, transparent);
+  }
+  /* accent hairlines shooting out horizontally past the frame edges */
+  .proj-shot-ext {
+    position: absolute;
+    height: 1px;
+    width: 3rem;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 60%, transparent), transparent);
+    pointer-events: none;
+  }
+  .proj-shot-ext-t { top: 0; left: 100%; }
+  .proj-shot-ext-b {
+    bottom: 0;
+    right: 100%;
+    transform: rotate(180deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .proj-status-dot { animation: none; }
+  }
+</style>
