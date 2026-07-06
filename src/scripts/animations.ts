@@ -213,12 +213,12 @@ function heroNameHover() {
 /**
  * Projects showcase deck:
  * 1. Section title does a SplitText word reveal (mirrors the other sections).
- * 2. Desktop: the deck pins and each project hands off to the next on scroll —
- *    the info column cascades out, the screenshot clips shut behind a vertical
- *    hairline that sweeps the full deck, the ghost index rolls over, and the
- *    next project un-clips from the opposite side. Direction alternates.
- * 3. Mobile / narrow: no pin — each stacked card gets a clip-reveal + cascade
- *    as it enters the viewport.
+ * 2. Desktop: the deck pins centered and each project hands off to the next on
+ *    scroll — the active window recedes into the background while the incoming
+ *    one arrives with its own entrance (rise, side slide, foreground settle…),
+ *    the info column cascades out/in and the index rolls over.
+ * 3. Mobile / narrow: no pin — each stacked card rises + cascades as it
+ *    enters the viewport.
  */
 function projects() {
   const deck = document.querySelector<HTMLElement>('[data-proj-deck]');
@@ -292,9 +292,34 @@ function projects() {
       },
     });
 
+    // Each incoming card gets its own entrance; the cycle keeps consecutive
+    // projects from ever repeating a move. All transform/opacity only.
+    const entrances = [
+      // rises from below and settles flat
+      { shot: { y: 95, scale: 0.94, rotateX: -9, transformOrigin: '50% 100%' },
+        info: { y: 26 } },
+      // slides in from the right, hinging like a turning panel
+      { shot: { x: 130, rotateY: -14, scale: 0.96, transformOrigin: '0% 50%' },
+        info: { x: 34 } },
+      // arrives from the foreground: oversized, settles back into place
+      { shot: { scale: 1.12, y: 18, transformOrigin: '50% 40%' },
+        info: { y: -26 } },
+      // slides in from the left, mirroring the panel hinge
+      { shot: { x: -130, rotateY: 14, scale: 0.96, transformOrigin: '100% 50%' },
+        info: { x: -34 } },
+      // drops from above and lands
+      { shot: { y: -90, rotateX: 10, scale: 0.94, transformOrigin: '50% 0%' },
+        info: { y: 26 } },
+    ];
+    // Identity target shared by every entrance — resets whatever axes the
+    // preset displaced.
+    const settled = { x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0, autoAlpha: 1 };
+
     for (let i = 0; i < n - 1; i++) {
       const cur = slides[i];
       const next = slides[i + 1];
+      const e = entrances[(i + 1) % entrances.length];
+      const swap = `swap${i}`;
 
       // dwell so each project holds the stage before handing off
       tl.to({}, { duration: 0.55 })
@@ -311,29 +336,28 @@ function projects() {
           ease: 'power2.in',
         }, '<0.05')
 
-        .set(cur, { autoAlpha: 0 })
-        .set(next, { autoAlpha: 1 })
+        // ── swap: pre-place the incoming pieces (still invisible) in the same
+        // frame the slide becomes active — this is what prevents the next card
+        // from flashing fully-formed before its entrance plays.
+        .addLabel(swap)
+        .set(shot(next), { ...e.shot, autoAlpha: 0 }, swap)
+        .set(info(next), { ...e.info, autoAlpha: 0 }, swap)
+        .set(cur, { autoAlpha: 0 }, swap)
+        .set(next, { autoAlpha: 1 }, swap)
 
         // ── rolling index
         .to(countTrack, {
           yPercent: -(100 / n) * (i + 1),
           duration: 0.4,
           ease: 'power2.inOut',
-        }, '<')
+        }, swap)
 
-        // ── enter: the next window rises from beneath and settles flat
-        .fromTo(shot(next),
-          { y: 95, scale: 0.94, rotateX: -9, autoAlpha: 0, transformOrigin: '50% 100%' },
-          {
-            y: 0, scale: 1, rotateX: 0, autoAlpha: 1,
-            duration: 0.6, ease: 'power3.out', immediateRender: false,
-          })
-        .fromTo(info(next),
-          { y: 26, autoAlpha: 0 },
-          {
-            y: 0, autoAlpha: 1, stagger: 0.05,
-            duration: 0.4, ease: 'power3.out', immediateRender: false,
-          }, '<0.15');
+        // ── enter: the window plays its own move, info follows the same axis
+        .to(shot(next), { ...settled, duration: 0.6, ease: 'power3.out' }, `${swap}+=0.05`)
+        .to(info(next), {
+          x: 0, y: 0, autoAlpha: 1, stagger: 0.05,
+          duration: 0.4, ease: 'power3.out',
+        }, `${swap}+=0.22`);
     }
     // final dwell so the last project isn't cut short
     tl.to({}, { duration: 0.55 });
@@ -525,7 +549,7 @@ function init() {
       { clearProps: 'all' });
     gsap.set('.exp-card', { clearProps: 'clip-path' });
     // Deck slides are pre-hidden/stacked by CSS on desktop; force them visible.
-    gsap.set('[data-proj-slide],[data-proj-clip],[data-proj-el],[data-proj-num]', { clearProps: 'all', autoAlpha: 1 });
+    gsap.set('[data-proj-slide],[data-proj-clip],[data-proj-el]', { clearProps: 'all', autoAlpha: 1 });
   };
 
   if (reduce) {
