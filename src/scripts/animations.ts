@@ -211,6 +211,56 @@ function heroNameHover() {
 }
 
 /**
+ * Hero photo card: crossfades the GitHub avatar into the real profile photo.
+ * Fine pointers swap on hover; touch devices tap to toggle (with a pulsing
+ * "tap" hint, dismissed on first interaction). Enter/Space toggles too.
+ */
+function heroPhotoSwap() {
+  const card = document.querySelector<HTMLElement>('[data-hero-avatar]');
+  if (!card) return;
+
+  const profile = card.querySelector<HTMLElement>('.hero-photo-img--profile');
+  const tag = card.querySelector<HTMLElement>('[data-hero-photo-tag]');
+  if (!profile || !tag) return;
+
+  const coarse = window.matchMedia('(hover: none)').matches;
+  let active = false;
+
+  gsap.set(profile, { transformOrigin: '50% 50%' });
+
+  const set = (on: boolean) => {
+    if (active === on) return;
+    active = on;
+    card.classList.toggle('is-active', on);
+    card.setAttribute('aria-pressed', String(on));
+    tag.textContent = on ? 'profile.jpg' : 'avatar.png';
+    gsap.to(profile, {
+      opacity: on ? 1 : 0,
+      scale: reduce ? 1 : on ? 1.04 : 1,
+      duration: reduce ? 0.01 : 0.5,
+      ease: 'power3.out',
+    });
+  };
+
+  const dismissHint = () => card.classList.add('hint-dismissed');
+
+  if (coarse) {
+    card.addEventListener('click', () => { dismissHint(); set(!active); });
+  } else {
+    card.addEventListener('mouseenter', () => set(true));
+    card.addEventListener('mouseleave', () => set(false));
+  }
+
+  card.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dismissHint();
+      set(!active);
+    }
+  });
+}
+
+/**
  * Projects showcase deck:
  * 1. Section title does a SplitText word reveal (mirrors the other sections).
  * 2. Desktop: the deck pins centered and each project hands off to the next on
@@ -570,7 +620,8 @@ function init() {
     const initScroll = () => {
       try {
         heroParallax();
-        // Cursor-following 3D tilt on the hero avatar (desktop only).
+        heroPhotoSwap();
+        // Cursor-following 3D tilt on the hero photo card (desktop only).
         const avatar = document.querySelector<HTMLElement>('[data-hero-avatar]');
         if (avatar && finePointer) tilt(avatar);
         aboutReveal();
