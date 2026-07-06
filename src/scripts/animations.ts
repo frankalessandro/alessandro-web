@@ -147,53 +147,6 @@ function navbar() {
   });
 }
 
-/**
- * Custom cursor — the brand's "< >" mark (see Logo.astro / the intro loader)
- * trails the pointer with a soft GSAP lag. Hovering anything clickable
- * spreads the two chevrons apart and brightens (the same "target acquired"
- * language as .btn-reticle's corner-snap on buttons, just riding on the
- * cursor itself), and clicking fires the ping-ring pulse already used on
- * icon chips elsewhere on the site. Desktop/fine-pointer + hover-capable
- * only — the native cursor is left alone everywhere else (matching CSS
- * gate in global.css hides it only under the same media query).
- */
-function customCursor() {
-  if (!finePointer || !window.matchMedia('(hover: hover)').matches) return;
-
-  const cursor = document.getElementById('cursor');
-  if (!cursor) return;
-
-  const moveX = gsap.quickTo(cursor, 'x', { duration: reduce ? 0 : 0.16, ease: 'power3.out' });
-  const moveY = gsap.quickTo(cursor, 'y', { duration: reduce ? 0 : 0.16, ease: 'power3.out' });
-
-  const HOVER_SEL = 'a, button, [role="button"], input, textarea, select, summary, label';
-
-  window.addEventListener('mousemove', (e) => {
-    moveX(e.clientX);
-    moveY(e.clientY);
-    cursor.classList.add('is-visible');
-  }, { passive: true });
-
-  window.addEventListener('mouseleave', () => cursor.classList.remove('is-visible'));
-
-  document.addEventListener('mouseover', (e) => {
-    const el = e.target instanceof Element ? e.target.closest(HOVER_SEL) : null;
-    cursor.classList.toggle('is-active', !!el);
-  }, { passive: true });
-
-  window.addEventListener('mousedown', (e) => {
-    cursor.classList.add('is-down');
-    if (reduce) return;
-    const ring = document.createElement('span');
-    ring.className = 'cursor-ping';
-    ring.style.left = `${e.clientX}px`;
-    ring.style.top = `${e.clientY}px`;
-    document.body.appendChild(ring);
-    ring.addEventListener('animationend', () => ring.remove(), { once: true });
-  });
-  window.addEventListener('mouseup', () => cursor.classList.remove('is-down'));
-}
-
 /** A subtle 3D tilt that follows the cursor across a card. */
 function tilt(card: HTMLElement) {
   gsap.set(card, { transformPerspective: 700, transformStyle: 'preserve-3d' });
@@ -708,10 +661,6 @@ function experienceReveal() {
 }
 
 function init() {
-  // Independent of the intro/scroll choreography below — runs (or safely
-  // no-ops on touch/coarse pointers) regardless of reduced motion.
-  customCursor();
-
   const fallback = () => {
     gsap.set('[data-anim-hero],#about,[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
       { clearProps: 'all' });

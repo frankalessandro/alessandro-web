@@ -80,16 +80,6 @@ const {
       class="fixed inset-0 w-full h-full pointer-events-none z-30"
     ></canvas>
 
-    <!-- Custom cursor: the brand's "< >" mark. Desktop/fine-pointer only —
-         see the matching `cursor: none` gate in global.css. Wired up in
-         animations.ts (customCursor()). -->
-    <div id="cursor" class="cursor" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-        <path class="cursor-l" d="M9 8 L5 12 L9 16" />
-        <path class="cursor-r" d="M15 8 L19 12 L15 16" />
-      </svg>
-    </div>
-
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
