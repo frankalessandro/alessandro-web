@@ -73,6 +73,23 @@ const {
       class="fixed inset-0 w-full h-full pointer-events-none z-0"
     ></canvas>
 
+    <!-- FX overlay: brace-formation particles render here so they can float
+         *over* the content (the hero photo) instead of hiding behind it. -->
+    <canvas
+      id="starfield-fx"
+      class="fixed inset-0 w-full h-full pointer-events-none z-30"
+    ></canvas>
+
+    <!-- Custom cursor: the brand's "< >" mark. Desktop/fine-pointer only —
+         see the matching `cursor: none` gate in global.css. Wired up in
+         animations.ts (customCursor()). -->
+    <div id="cursor" class="cursor" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path class="cursor-l" d="M9 8 L5 12 L9 16" />
+        <path class="cursor-r" d="M15 8 L19 12 L15 16" />
+      </svg>
+    </div>
+
     <!-- Scroll progress bar -->
     <div
       id="scroll-progress"
@@ -133,6 +150,11 @@ const {
         // Non-null typed aliases so narrowing survives inside nested functions.
         const canvas: HTMLCanvasElement = canvasEl;
         const ctx: CanvasRenderingContext2D = ctx2d;
+        // FX overlay canvas (above the content): brace particles draw here so
+        // their tips can sit on top of the hero photo instead of behind it.
+        const fxEl = document.getElementById('starfield-fx');
+        const fxCanvas = fxEl instanceof HTMLCanvasElement ? fxEl : null;
+        const fctx = fxCanvas ? fxCanvas.getContext('2d') : null;
         {
           type Tone = 'white' | 'gray' | 'accent';
           interface Star {
@@ -161,6 +183,112 @@ const {
           const shocks: Shock[] = [];
           let meteorNext = 0; // scheduled on the draw clock, first one shortly after start
           let lastT = 0;
+
+          // "{ }" brace formation: [data-particle-brace] elements (currently the
+          // hero photo card) spawn a cloud of dedicated stars that coalesce into
+          // a curly-brace silhouette flanking the element on hover, then
+          // dissolve back out on leave. Desktop/fine-pointer only (see
+          // `enableField` below — same gate as the constellation/magnetism field).
+          interface BraceParticle { x: number; y: number; tx: number; ty: number; a: number; r: number; tone: Tone; phase: number; }
+          let braceParticles: BraceParticle[] = [];
+          let braceActive = false;
+
+          // Pre-rendered glow sprites (core + halo baked in, one per tone).
+          // Drawing these with drawImage is drastically cheaper than setting
+          // canvas shadowBlur per particle — which is what made the brace
+          // hover lag the whole page.
+          const SPRITE = 20;
+          function makeSprite(rgb: string): HTMLCanvasElement {
+            const c = document.createElement('canvas');
+            c.width = c.height = SPRITE;
+            const g = c.getContext('2d')!;
+            const half = SPRITE / 2;
+            const grad = g.createRadialGradient(half, half, 0, half, half, half);
+            grad.addColorStop(0, `rgba(${rgb},1)`);
+            grad.addColorStop(0.35, `rgba(${rgb},0.35)`);
+            grad.addColorStop(1, `rgba(${rgb},0)`);
+            g.fillStyle = grad;
+            g.fillRect(0, 0, SPRITE, SPRITE);
+            return c;
+          }
+          const braceSprites: Record<Tone, HTMLCanvasElement> = {
+            accent: makeSprite('110,231,183'),
+            gray: makeSprite('160,160,170'),
+            white: makeSprite('240,240,240'),
+          };
+
+          /** Samples the actual "{" / "}" glyph from a serif font on an
+           *  offscreen canvas and returns its filled pixels as normalized
+           *  [0..1]² points — so the particle formation is a real typographic
+           *  brace, not an approximated curve. Cached per glyph. */
+          const glyphCache: Record<string, { x: number; y: number }[]> = {};
+          function sampleGlyph(glyph: string): { x: number; y: number }[] {
+            if (glyphCache[glyph]) return glyphCache[glyph];
+            const W = 140, H = 260;
+            const off = document.createElement('canvas');
+            off.width = W; off.height = H;
+            const octx = off.getContext('2d')!;
+            // Serif braces have the pretty curly hooks; Georgia is universal.
+            octx.font = '200px Georgia, "Times New Roman", serif';
+            octx.textAlign = 'center';
+            octx.textBaseline = 'middle';
+            octx.fillStyle = '#fff';
+            octx.fillText(glyph, W / 2, H / 2);
+            const data = octx.getImageData(0, 0, W, H).data;
+            const pts: { x: number; y: number }[] = [];
+            const STEP = 3; // px between samples — controls particle density
+            let minX = W, maxX = 0, minY = H, maxY = 0;
+            for (let y = 0; y < H; y += STEP) {
+              for (let x = 0; x < W; x += STEP) {
+                if (data[(y * W + x) * 4 + 3] > 128) {
+                  pts.push({ x, y });
+                  if (x < minX) minX = x; if (x > maxX) maxX = x;
+                  if (y < minY) minY = y; if (y > maxY) maxY = y;
+                }
+              }
+            }
+            // Normalize to the glyph's own bounding box.
+            const gw = Math.max(maxX - minX, 1), gh = Math.max(maxY - minY, 1);
+            const norm = pts.map((p) => ({ x: (p.x - minX) / gw, y: (p.y - minY) / gh }));
+            glyphCache[glyph] = norm;
+            return norm;
+          }
+
+          /** (Re)builds the particle cloud around `rect`: a real "{" glyph on
+           *  the left and "}" on the right, oversized past the element's
+           *  height and tucked inward so the hook tips ride *on top of* the
+           *  photo — enclosing it like {a}. (They render on the FX overlay
+           *  canvas, which sits above the content.) */
+          function spawnBrace(rect: DOMRect) {
+            const next: BraceParticle[] = [];
+            const gh = rect.height * 1.28;              // oversize past the photo
+            const gw = gh * 0.35;                        // serif brace aspect ratio
+            const gy = rect.top + rect.height / 2 - gh / 2;
+            const INSET = 20;                            // how far the tips overlap the photo
+            for (const side of [-1, 1] as const) {
+              const glyph = side < 0 ? '{' : '}';
+              const gx = side < 0 ? rect.left + INSET - gw : rect.right - INSET;
+              for (const p of sampleGlyph(glyph)) {
+                // Thin the fill a little so it reads as a star constellation
+                // (and keeps the per-frame draw cost in check) — each hover
+                // gets a slightly different scatter.
+                if (Math.random() < 0.3) continue;
+                const tx = gx + p.x * gw;
+                const ty = gy + p.y * gh;
+                next.push({
+                  x: tx + rand(-30, 30),
+                  y: ty + rand(-30, 30),
+                  tx: tx + rand(-0.7, 0.7),
+                  ty: ty + rand(-0.7, 0.7),
+                  a: 0,
+                  r: rand(0.5, 1.2),
+                  tone: pickTone(),
+                  phase: rand(0, Math.PI * 2),
+                });
+              }
+            }
+            braceParticles = next;
+          }
 
           const rand = (min: number, max: number) => Math.random() * (max - min) + min;
 
@@ -204,6 +332,11 @@ const {
             canvas.width = Math.round(width * dpr);
             canvas.height = Math.round(height * dpr);
             ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            if (fxCanvas && fctx) {
+              fxCanvas.width = Math.round(width * dpr);
+              fxCanvas.height = Math.round(height * dpr);
+              fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
           }
 
           function rebuild() {
@@ -443,6 +576,34 @@ const {
 
             ctx.shadowBlur = 0;
 
+            // Brace particles: ease toward their target point on the curly-brace
+            // outline, fading in on hover-enter and back out on hover-leave.
+            // Rendered as pre-baked glow sprites (drawImage) — no per-particle
+            // shadowBlur, which was tanking the frame rate — and drawn on the
+            // FX overlay canvas so they float above the photo.
+            if (fctx && braceParticles.length) {
+              fctx.clearRect(0, 0, width, height);
+              let anyVisible = false;
+              for (const p of braceParticles) {
+                p.x += (p.tx - p.x) * 0.22;
+                p.y += (p.ty - p.y) * 0.22;
+                p.a += ((braceActive ? 1 : 0) - p.a) * 0.12;
+                if (p.a < 0.01) continue;
+                anyVisible = true;
+                const twinkle = reduceMotion ? 1 : 0.88 + 0.12 * Math.sin(t * 2.2 + p.phase);
+                fctx.globalAlpha = p.a * twinkle;
+                const size = p.r * 7; // sprite draw size (halo included)
+                fctx.drawImage(braceSprites[p.tone], p.x - size / 2, p.y - size / 2, size, size);
+              }
+              fctx.globalAlpha = 1;
+              // Fully dissolved after leave — stop iterating them every frame
+              // (and wipe the overlay one last time so nothing lingers).
+              if (!braceActive && !anyVisible) {
+                braceParticles = [];
+                fctx.clearRect(0, 0, width, height);
+              }
+            }
+
             // Meteors: a bright head with a gradient tail that fades in and out.
             for (let i = meteors.length - 1; i >= 0; i--) {
               const m = meteors[i];
@@ -510,6 +671,18 @@ const {
               el.addEventListener('mouseenter', () => { hoverTarget = 1; });
               el.addEventListener('mouseleave', () => { hoverTarget = 0; });
             });
+
+            // "{ }" brace formation — desktop/fine-pointer only, same field as
+            // the constellation/magnetism effect above.
+            if (enableField) {
+              document.querySelectorAll('[data-particle-brace]').forEach((el) => {
+                el.addEventListener('mouseenter', () => {
+                  spawnBrace(el.getBoundingClientRect());
+                  braceActive = true;
+                });
+                el.addEventListener('mouseleave', () => { braceActive = false; });
+              });
+            }
 
             // Supernova: clicking empty space fires an expanding ring and
             // shoves nearby stars away (they spring back on their own).

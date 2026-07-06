@@ -2,6 +2,7 @@
 import { Image } from "astro:assets";
 import avatarImg from "../assets/Avatar.webp";
 import profileImg from "../assets/Perfil foto.webp";
+import studioImg from "../assets/StudioPhoto.webp";
 
 const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
 ---
@@ -89,40 +90,55 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
     <div data-anim-hero="avatar" class="flex justify-center md:justify-end">
       <div
         data-hero-avatar
+        data-particle-hover
+        data-particle-brace
         role="button"
         tabindex="0"
         aria-pressed="false"
-        aria-label="Alternar entre avatar de GitHub y foto de perfil"
+        aria-label="Alternar entre avatar de GitHub, foto de perfil y foto de estudio"
         class="hero-photo w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 cursor-pointer"
       >
-        <div class="hero-photo-frame">
-          <Image
-            src={avatarImg}
-            alt="Avatar de GitHub de Frank Roldan"
-            width={288}
-            height={288}
-            position="top"
-            densities={[1, 2]}
-            format="webp"
-            quality={95}
-            class="hero-photo-img hero-photo-img--avatar"
-          />
-          <Image
-            src={profileImg}
-            alt="Foto de perfil de Frank Roldan"
-            width={288}
-            height={288}
-            densities={[1, 2]}
-            format="webp"
-            quality={95}
-            class="hero-photo-img hero-photo-img--profile"
-          />
-        </div>
+        <div data-hero-spin class="hero-photo-spin">
+          <div class="hero-photo-frame">
+            <Image
+              src={avatarImg}
+              alt="Avatar de GitHub de Frank Roldan"
+              width={288}
+              height={288}
+              position="top"
+              densities={[1, 2]}
+              format="webp"
+              quality={95}
+              class="hero-photo-img hero-photo-img--avatar"
+            />
+            <Image
+              src={profileImg}
+              alt="Foto de perfil de Frank Roldan"
+              width={288}
+              height={288}
+              densities={[1, 2]}
+              format="webp"
+              quality={95}
+              class="hero-photo-img hero-photo-img--profile"
+            />
+            <Image
+              src={studioImg}
+              alt="Foto de estudio de Frank Roldan"
+              width={288}
+              height={288}
+              position="top"
+              densities={[1, 2]}
+              format="webp"
+              quality={95}
+              class="hero-photo-img hero-photo-img--studio"
+            />
+          </div>
 
-        <span class="hero-photo-corner hero-photo-corner--tl"></span>
-        <span class="hero-photo-corner hero-photo-corner--br"></span>
-        <span data-hero-photo-tag class="hero-photo-tag">avatar</span>
-        <span class="hero-photo-hint">tap</span>
+          <span class="hero-photo-corner hero-photo-corner--tl"></span>
+          <span class="hero-photo-corner hero-photo-corner--br"></span>
+          <span data-hero-photo-tag class="hero-photo-tag">avatar</span>
+          <span class="hero-photo-hint">tap</span>
+        </div>
       </div>
     </div>
   </div>
