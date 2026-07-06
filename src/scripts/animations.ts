@@ -147,6 +147,53 @@ function navbar() {
   });
 }
 
+/**
+ * Custom cursor — the brand's "< >" mark (see Logo.astro / the intro loader)
+ * trails the pointer with a soft GSAP lag. Hovering anything clickable
+ * spreads the two chevrons apart and brightens (the same "target acquired"
+ * language as .btn-reticle's corner-snap on buttons, just riding on the
+ * cursor itself), and clicking fires the ping-ring pulse already used on
+ * icon chips elsewhere on the site. Desktop/fine-pointer + hover-capable
+ * only — the native cursor is left alone everywhere else (matching CSS
+ * gate in global.css hides it only under the same media query).
+ */
+function customCursor() {
+  if (!finePointer || !window.matchMedia('(hover: hover)').matches) return;
+
+  const cursor = document.getElementById('cursor');
+  if (!cursor) return;
+
+  const moveX = gsap.quickTo(cursor, 'x', { duration: reduce ? 0 : 0.16, ease: 'power3.out' });
+  const moveY = gsap.quickTo(cursor, 'y', { duration: reduce ? 0 : 0.16, ease: 'power3.out' });
+
+  const HOVER_SEL = 'a, button, [role="button"], input, textarea, select, summary, label';
+
+  window.addEventListener('mousemove', (e) => {
+    moveX(e.clientX);
+    moveY(e.clientY);
+    cursor.classList.add('is-visible');
+  }, { passive: true });
+
+  window.addEventListener('mouseleave', () => cursor.classList.remove('is-visible'));
+
+  document.addEventListener('mouseover', (e) => {
+    const el = e.target instanceof Element ? e.target.closest(HOVER_SEL) : null;
+    cursor.classList.toggle('is-active', !!el);
+  }, { passive: true });
+
+  window.addEventListener('mousedown', (e) => {
+    cursor.classList.add('is-down');
+    if (reduce) return;
+    const ring = document.createElement('span');
+    ring.className = 'cursor-ping';
+    ring.style.left = `${e.clientX}px`;
+    ring.style.top = `${e.clientY}px`;
+    document.body.appendChild(ring);
+    ring.addEventListener('animationend', () => ring.remove(), { once: true });
+  });
+  window.addEventListener('mouseup', () => cursor.classList.remove('is-down'));
+}
+
 /** A subtle 3D tilt that follows the cursor across a card. */
 function tilt(card: HTMLElement) {
   gsap.set(card, { transformPerspective: 700, transformStyle: 'preserve-3d' });
@@ -211,51 +258,91 @@ function heroNameHover() {
 }
 
 /**
- * Hero photo card: crossfades the GitHub avatar into the real profile photo.
- * Fine pointers swap on hover; touch devices tap to toggle (with a pulsing
- * "tap" hint, dismissed on first interaction). Enter/Space toggles too.
+ * Hero photo card: cycles GitHub avatar → profile photo → studio photo with
+ * a single clean coin flip. The whole card — frame, corners, tag, hint —
+ * rides one rigid plane (`.hero-photo-spin`) that lifts, turns exactly one
+ * full turn, and drops back down with a soft landing bounce; the photo
+ * underneath is only swapped while that plane is edge-on/back-facing
+ * (backface-visibility: hidden), so the change itself is never actually
+ * seen — just the flip.
+ * Click/tap to flip forward, on desktop and touch alike (pulsing "tap" hint,
+ * dismissed on first interaction). Enter/Space flips too.
  */
 function heroPhotoSwap() {
   const card = document.querySelector<HTMLElement>('[data-hero-avatar]');
   if (!card) return;
 
-  const profile = card.querySelector<HTMLElement>('.hero-photo-img--profile');
+  const spin = card.querySelector<HTMLElement>('[data-hero-spin]');
+  const layers = [
+    card.querySelector<HTMLElement>('.hero-photo-img--avatar'),
+    card.querySelector<HTMLElement>('.hero-photo-img--profile'),
+    card.querySelector<HTMLElement>('.hero-photo-img--studio'),
+  ];
+  const labels = ['avatar', 'profile', 'studio'];
   const tag = card.querySelector<HTMLElement>('[data-hero-photo-tag]');
-  if (!profile || !tag) return;
+  const frame = card.querySelector<HTMLElement>('.hero-photo-frame');
+  if (!spin || layers.some((l) => !l) || !tag || !frame) return;
 
-  const coarse = window.matchMedia('(hover: none)').matches;
-  let active = false;
+  let idx = 0;
+  let zCounter = 10;
+  let spinAngle = 0;
+  let animating = false;
 
-  gsap.set(profile, { transformOrigin: '50% 50%' });
+  gsap.set(spin, { transformOrigin: '50% 50%' });
 
-  const set = (on: boolean) => {
-    if (active === on) return;
-    active = on;
-    card.classList.toggle('is-active', on);
-    card.setAttribute('aria-pressed', String(on));
-    tag.textContent = on ? 'profile' : 'avatar';
-    gsap.to(profile, {
-      opacity: on ? 1 : 0,
-      scale: reduce ? 1 : on ? 1.04 : 1,
-      duration: reduce ? 0.01 : 0.5,
-      ease: 'power3.out',
-    });
+  const goTo = (next: number) => {
+    if (next === idx || animating) return;
+    animating = true;
+    idx = next;
+    const incoming = layers[idx]!;
+
+    card.classList.toggle('is-active', idx !== 0);
+    card.setAttribute('aria-pressed', String(idx !== 0));
+    scrambleText(tag, labels[idx], 6, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+    // One full turn, always the same direction — ends back at a multiple of
+    // 360° so the settled face reads right-side up. The photo swap rides
+    // the single edge-on/back-facing window (mod 90–270); it's invisible.
+    spinAngle += 360;
+    let swapped = false;
+
+    const DURATION = 0.58;
+
+    const tl = gsap.timeline({ onComplete: () => { animating = false; } });
+    tl.to(spin, {
+      rotateY: spinAngle,
+      duration: DURATION,
+      ease: 'power2.inOut',
+      onUpdate() {
+        if (swapped) return;
+        const cur = Number(gsap.getProperty(spin, 'rotateY'));
+        const mod = ((cur % 360) + 360) % 360;
+        if (mod > 90 && mod < 270) {
+          swapped = true;
+          zCounter += 1;
+          gsap.set(incoming, { zIndex: zCounter });
+          gsap.fromTo(frame,
+            { boxShadow: '0 0 0 1px rgba(110,231,183,0.8), 0 0 30px 2px rgba(110,231,183,0.5)' },
+            { boxShadow: '0 0 0 0px rgba(110,231,183,0), 0 0 0px 0px rgba(110,231,183,0)', duration: 0.5, ease: 'power2.out' }
+          );
+        }
+      },
+    }, 0)
+      // Lift on the way up, soft-bounce landing on the way down.
+      .to(spin, { y: -16, duration: DURATION / 2, ease: 'power2.out' }, 0)
+      .to(spin, { y: 0, duration: DURATION / 2, ease: 'back.out(1.3)' }, DURATION / 2);
   };
 
   const dismissHint = () => card.classList.add('hint-dismissed');
+  const advance = () => goTo((idx + 1) % layers.length);
 
-  if (coarse) {
-    card.addEventListener('click', () => { dismissHint(); set(!active); });
-  } else {
-    card.addEventListener('mouseenter', () => set(true));
-    card.addEventListener('mouseleave', () => set(false));
-  }
+  card.addEventListener('click', () => { dismissHint(); advance(); });
 
   card.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       dismissHint();
-      set(!active);
+      advance();
     }
   });
 }
@@ -351,6 +438,11 @@ function projects() {
         pin: true,
         scrub: 1,
         anticipatePin: 1,
+        // A fast flick-scroll through a scrubbed pin can outrun the smoothed
+        // scrub (scrub: 1 lags on purpose) — the pin then snaps to catch up,
+        // which is the "salto" where the title flashes over the deck for a
+        // frame. Finishing the scrub instantly past a fast scroll avoids it.
+        fastScrollEnd: true,
       },
     });
 
@@ -493,17 +585,17 @@ function sectionHeads() {
 }
 
 /**
- * Scrambles an element's text through random digits before resolving
+ * Scrambles an element's text through random characters before resolving
  * to the final value. Duration ≈ frames × 40ms.
  */
-function scrambleText(el: HTMLElement, final: string, frames = 16) {
-  const chars = '0123456789';
+function scrambleText(el: HTMLElement, final: string, frames = 16, chars = '0123456789') {
   let f = 0;
   const id = setInterval(() => {
     if (f++ >= frames) { el.textContent = final; clearInterval(id); return; }
-    el.textContent =
-      chars[Math.floor(Math.random() * chars.length)] +
-      chars[Math.floor(Math.random() * chars.length)];
+    el.textContent = Array.from(
+      { length: final.length },
+      () => chars[Math.floor(Math.random() * chars.length)]
+    ).join('');
   }, 40);
 }
 
@@ -616,6 +708,10 @@ function experienceReveal() {
 }
 
 function init() {
+  // Independent of the intro/scroll choreography below — runs (or safely
+  // no-ops on touch/coarse pointers) regardless of reduced motion.
+  customCursor();
+
   const fallback = () => {
     gsap.set('[data-anim-hero],#about,[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
       { clearProps: 'all' });

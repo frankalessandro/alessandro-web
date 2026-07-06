@@ -251,7 +251,7 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
                 </span>
                 <span class="ml-3 flex-1 h-px bg-border"></span>
               </div>
-              <div class="proj-shot-viewport overflow-hidden">
+              <div class="proj-shot-viewport max-sm:h-44 overflow-hidden">
                 <img
                   src={p.shot}
                   alt={`Captura de ${p.title}`}
@@ -259,7 +259,7 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
                   height="900"
                   loading="lazy"
                   data-proj-img
-                  class="w-full h-auto block"
+                  class="w-full h-auto max-sm:h-full max-sm:object-cover max-sm:object-top block"
                 />
               </div>
               <!-- accent hairlines extending past the frame -->
