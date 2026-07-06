@@ -233,7 +233,7 @@ function heroPhotoSwap() {
     active = on;
     card.classList.toggle('is-active', on);
     card.setAttribute('aria-pressed', String(on));
-    tag.textContent = on ? 'profile.jpg' : 'avatar.png';
+    tag.textContent = on ? 'profile' : 'avatar';
     gsap.to(profile, {
       opacity: on ? 1 : 0,
       scale: reduce ? 1 : on ? 1.04 : 1,
@@ -299,17 +299,29 @@ function projects() {
   const info = (s: HTMLElement) => s.querySelectorAll<HTMLElement>('[data-proj-el]');
   const shot = (s: HTMLElement) => s.querySelector<HTMLElement>('[data-proj-clip]')!;
 
-  const mm = gsap.matchMedia();
+  const stage = deck.querySelector<HTMLElement>('[data-proj-stage]')!;
+  const countTrack = deck.querySelector<HTMLElement>('[data-proj-count]');
+  const n = slides.length;
 
-  // ── Desktop: deck pinned at screen center, depth hand-offs ─────────────
-  // The active window recedes into the background (scales down, tips back,
-  // fades) while the next one rises from below the fold and settles; the
-  // info column cascades out/in and the index rolls over.
-  mm.add('(min-width: 1024px)', () => {
-    const stage = deck.querySelector<HTMLElement>('[data-proj-stage]')!;
-    const countTrack = deck.querySelector<HTMLElement>('[data-proj-count]');
-    const n = slides.length;
+  // Identity target shared by every entrance — resets whatever axes the
+  // preset displaced.
+  const settled = { x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0, autoAlpha: 1 };
 
+  type Entrance = { shot: gsap.TweenVars; info: gsap.TweenVars };
+
+  /**
+   * The pinned hand-off deck, shared by desktop and mobile. The deck pins
+   * centered and each project cedes the stage to the next in place: the active
+   * window recedes into the background (scales down, tips back, fades) while
+   * the incoming one plays its own entrance and settles, the info column
+   * cascades out/in and — where visible — the index rolls over.
+   *
+   *   entrances  per-project incoming moves, cycled so no two consecutive
+   *              projects repeat a motion (transform/opacity only).
+   *   endPct     scroll distance per hand-off, as a % of viewport height.
+   *   withCounter animate the rolling index (desktop only — hidden on mobile).
+   */
+  function buildDeck(entrances: Entrance[], endPct: number, withCounter: boolean) {
     // Depth of field so the rotateX recede/rise reads as real perspective.
     gsap.set(stage, { perspective: 1100 });
 
@@ -335,35 +347,12 @@ function projects() {
       scrollTrigger: {
         trigger: deck,
         start: 'center center',
-        end: () => `+=${(n - 1) * 85}%`,
+        end: () => `+=${(n - 1) * endPct}%`,
         pin: true,
         scrub: 1,
         anticipatePin: 1,
       },
     });
-
-    // Each incoming card gets its own entrance; the cycle keeps consecutive
-    // projects from ever repeating a move. All transform/opacity only.
-    const entrances = [
-      // rises from below and settles flat
-      { shot: { y: 95, scale: 0.94, rotateX: -9, transformOrigin: '50% 100%' },
-        info: { y: 26 } },
-      // slides in from the right, hinging like a turning panel
-      { shot: { x: 130, rotateY: -14, scale: 0.96, transformOrigin: '0% 50%' },
-        info: { x: 34 } },
-      // arrives from the foreground: oversized, settles back into place
-      { shot: { scale: 1.12, y: 18, transformOrigin: '50% 40%' },
-        info: { y: -26 } },
-      // slides in from the left, mirroring the panel hinge
-      { shot: { x: -130, rotateY: 14, scale: 0.96, transformOrigin: '100% 50%' },
-        info: { x: -34 } },
-      // drops from above and lands
-      { shot: { y: -90, rotateX: 10, scale: 0.94, transformOrigin: '50% 0%' },
-        info: { y: 26 } },
-    ];
-    // Identity target shared by every entrance — resets whatever axes the
-    // preset displaced.
-    const settled = { x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0, autoAlpha: 1 };
 
     for (let i = 0; i < n - 1; i++) {
       const cur = slides[i];
@@ -393,17 +382,19 @@ function projects() {
         .set(shot(next), { ...e.shot, autoAlpha: 0 }, swap)
         .set(info(next), { ...e.info, autoAlpha: 0 }, swap)
         .set(cur, { autoAlpha: 0 }, swap)
-        .set(next, { autoAlpha: 1 }, swap)
+        .set(next, { autoAlpha: 1 }, swap);
 
-        // ── rolling index
-        .to(countTrack, {
+      // ── rolling index (desktop only — the counter is hidden on mobile)
+      if (withCounter && countTrack) {
+        tl.to(countTrack, {
           yPercent: -(100 / n) * (i + 1),
           duration: 0.4,
           ease: 'power2.inOut',
-        }, swap)
+        }, swap);
+      }
 
-        // ── enter: the window plays its own move, info follows the same axis
-        .to(shot(next), { ...settled, duration: 0.6, ease: 'power3.out' }, `${swap}+=0.05`)
+      // ── enter: the window plays its own move, info follows the same axis
+      tl.to(shot(next), { ...settled, duration: 0.6, ease: 'power3.out' }, `${swap}+=0.05`)
         .to(info(next), {
           x: 0, y: 0, autoAlpha: 1, stagger: 0.05,
           duration: 0.4, ease: 'power3.out',
@@ -411,18 +402,49 @@ function projects() {
     }
     // final dwell so the last project isn't cut short
     tl.to({}, { duration: 0.55 });
+  }
+
+  const mm = gsap.matchMedia();
+
+  // ── Desktop: wide entrances that use the horizontal axis and panel hinges. ─
+  mm.add('(min-width: 1024px)', () => {
+    buildDeck([
+      // rises from below and settles flat
+      { shot: { y: 95, scale: 0.94, rotateX: -9, transformOrigin: '50% 100%' },
+        info: { y: 26 } },
+      // slides in from the right, hinging like a turning panel
+      { shot: { x: 130, rotateY: -14, scale: 0.96, transformOrigin: '0% 50%' },
+        info: { x: 34 } },
+      // arrives from the foreground: oversized, settles back into place
+      { shot: { scale: 1.12, y: 18, transformOrigin: '50% 40%' },
+        info: { y: -26 } },
+      // slides in from the left, mirroring the panel hinge
+      { shot: { x: -130, rotateY: 14, scale: 0.96, transformOrigin: '100% 50%' },
+        info: { x: -34 } },
+      // drops from above and lands
+      { shot: { y: -90, rotateX: 10, scale: 0.94, transformOrigin: '50% 0%' },
+        info: { y: 26 } },
+    ], 85, true);
   });
 
-  // ── Mobile / narrow: stacked cards, window rises per card ──────────────
+  // ── Mobile / narrow: same pinned hand-off, but entrances stay on the
+  // vertical/scale/depth axes — no horizontal slides or Y-hinges that could
+  // push content past a narrow viewport and cause sideways scroll. ──────────
   mm.add('(max-width: 1023px)', () => {
-    slides.forEach((slide) => {
-      gsap.timeline({
-        defaults: { ease: 'power3.out' },
-        scrollTrigger: { trigger: slide, start: 'top 80%', once: true },
-      })
-        .from(shot(slide), { y: 50, scale: 0.96, autoAlpha: 0, duration: 0.8 })
-        .from(info(slide), { y: 24, autoAlpha: 0, stagger: 0.06, duration: 0.5 }, '-=0.45');
-    });
+    buildDeck([
+      // rises from below and settles flat
+      { shot: { y: 90, scale: 0.94, rotateX: -8, transformOrigin: '50% 100%' },
+        info: { y: 24 } },
+      // drops from above and lands
+      { shot: { y: -80, scale: 0.94, rotateX: 8, transformOrigin: '50% 0%' },
+        info: { y: -24 } },
+      // arrives from the foreground: oversized, settles back into place
+      { shot: { scale: 1.1, y: 16, transformOrigin: '50% 40%' },
+        info: { y: -22 } },
+      // rises with a deeper compression
+      { shot: { y: 74, scale: 0.9, rotateX: -6, transformOrigin: '50% 100%' },
+        info: { y: 22 } },
+    ], 80, false);
   });
 
   // Desktop hover: subtle 3D tilt on the screenshot window

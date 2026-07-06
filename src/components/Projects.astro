@@ -17,11 +17,43 @@ const projects = [
       'Prediction pool for the 2026 World Cup group stage: 72 picks per participant, points computed from real TheSportsDB scores resolved at build time, tie-break standings and filterable tables. 100% static.',
     tags: ['Astro', 'TypeScript', 'Tailwind 4', 'TheSportsDB'],
     repo: 'https://github.com/frankalessandro/polla-mundialista',
-    demo: null,
+    demo: 'https://polla-mundialista-five-delta.vercel.app/',
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
+    live: false,
+    accent: '#fbbf24',
+  },
+  {
+    title: 'Spa Salud y Vida',
+    logo: '/projects/spa-fav.svg',
+    shot: '/projects/spa.webp',
+    descEs:
+      'Sitio web para un spa y centro de bienestar: presentación de servicios y captación de clientes, construido estático con Astro y desplegado en Vercel.',
+    descEn:
+      'Website for a spa & wellness center: service showcase and client acquisition, statically built with Astro and deployed on Vercel.',
+    tags: ['Astro', 'TypeScript', 'CSS', 'GSAP'],
+    repo: 'https://github.com/frankalessandro/spasaludyvida',
+    demo: 'https://spasaludyvida.vercel.app',
     statusEs: 'EN PRODUCCIÓN',
     statusEn: 'IN PRODUCTION',
     live: true,
-    accent: '#fbbf24',
+    accent: '#22d3ee',
+  },
+  {
+    title: 'Felinas Web',
+    logo: '/projects/felinas-fav.svg',
+    shot: '/projects/felinas.webp',
+    descEs:
+      'Sitio oficial de Pantera Felinas, academia de danza urbana femenina: landing con selector de sección, página de academia (estilos, planes, FAQ), sección de shows, animaciones on-scroll y agendamiento por WhatsApp.',
+    descEn:
+      'Official site for Pantera Felinas, a women’s urban dance academy: landing with section selector, academy page (styles, plans, FAQ), shows section, on-scroll animations and WhatsApp booking.',
+    tags: ['Astro 6', 'React', 'Tailwind', 'GSAP'],
+    repo: 'https://github.com/frankalessandro/felinas-web',
+    demo: 'https://felinas-web.vercel.app/',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#a78bfa',
   },
   {
     title: 'Forge',
@@ -33,7 +65,7 @@ const projects = [
       'Gym workout tracker, solo or in groups with friends. Auth and data on Supabase (PostgreSQL + RLS), forms validated with Zod + React Hook Form and global state with Zustand.',
     tags: ['React 19', 'Supabase', 'Zustand', 'Tailwind 4'],
     repo: 'https://github.com/frankalessandro/forge',
-    demo: null,
+    demo: 'https://forge-phi-five.vercel.app/',
     statusEs: 'EN PRODUCCIÓN',
     statusEn: 'IN PRODUCTION',
     live: true,
@@ -49,7 +81,7 @@ const projects = [
       'Full-stack banking simulator: roles (director, advisor, teller, client), multi-step account opening, request authorization flows and a cash desk module. Swagger-documented API. Qualified at regional and national level in the XIII Research Incubator Meetup.',
     tags: ['React', 'Node.js', 'PostgreSQL', 'Swagger'],
     repo: 'https://github.com/frankalessandro/Simulador_Banca',
-    demo: null,
+    demo: 'https://clarbank.vercel.app/',
     statusEs: 'FINALIZADO',
     statusEn: 'COMPLETED',
     live: false,
@@ -66,46 +98,56 @@ const projects = [
     tags: ['Astro', 'JavaScript', 'Tailwind'],
     repo: 'https://github.com/frankalessandro/VotApp',
     demo: 'https://vot-app.vercel.app',
-    statusEs: 'EN PRODUCCIÓN',
-    statusEn: 'IN PRODUCTION',
-    live: true,
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
+    live: false,
     accent: '#6ee7b7',
-  },
-  {
-    title: 'Felinas Web',
-    logo: '/projects/felinas-fav.svg',
-    shot: '/projects/felinas.webp',
-    descEs:
-      'Sitio oficial de Pantera Felinas, academia de danza urbana femenina: landing con selector de sección, página de academia (estilos, planes, FAQ), sección de shows, animaciones on-scroll y agendamiento por WhatsApp.',
-    descEn:
-      'Official site for Pantera Felinas, a women’s urban dance academy: landing with section selector, academy page (styles, plans, FAQ), shows section, on-scroll animations and WhatsApp booking.',
-    tags: ['Astro 6', 'React', 'Tailwind'],
-    repo: 'https://github.com/frankalessandro/felinas-web',
-    demo: null,
-    statusEs: 'EN PRODUCCIÓN',
-    statusEn: 'IN PRODUCTION',
-    live: true,
-    accent: '#a78bfa',
-  },
-  {
-    title: 'Spa Salud y Vida',
-    logo: '/projects/spa-fav.svg',
-    shot: '/projects/spa.webp',
-    descEs:
-      'Sitio web para un spa y centro de bienestar: presentación de servicios y captación de clientes, construido estático con Astro y desplegado en Vercel.',
-    descEn:
-      'Website for a spa & wellness center: service showcase and client acquisition, statically built with Astro and deployed on Vercel.',
-    tags: ['Astro', 'TypeScript', 'CSS'],
-    repo: 'https://github.com/frankalessandro/spasaludyvida',
-    demo: 'https://spasaludyvida.vercel.app',
-    statusEs: 'EN PRODUCCIÓN',
-    statusEn: 'IN PRODUCTION',
-    live: true,
-    accent: '#22d3ee',
   },
 ];
 
 const total = String(projects.length).padStart(2, '0');
+
+// ── Tech icons ───────────────────────────────────────────────────────────
+// Brand SVGs (simple-icons) inlined at build so each stack tag renders as a
+// monochrome glyph tinted with the project accent instead of plain text.
+// zustand / thesportsdb have no brand mark → hand-drawn fallbacks.
+import astro from '../assets/tech/astro.svg?raw';
+import typescript from '../assets/tech/typescript.svg?raw';
+import javascript from '../assets/tech/javascript.svg?raw';
+import tailwindcss from '../assets/tech/tailwindcss.svg?raw';
+import react from '../assets/tech/react.svg?raw';
+import supabase from '../assets/tech/supabase.svg?raw';
+import zustand from '../assets/tech/zustand.svg?raw';
+import nodedotjs from '../assets/tech/nodedotjs.svg?raw';
+import postgresql from '../assets/tech/postgresql.svg?raw';
+import swagger from '../assets/tech/swagger.svg?raw';
+import css3 from '../assets/tech/css3.svg?raw';
+import thesportsdb from '../assets/tech/thesportsdb.svg?raw';
+import greensock from '../assets/tech/greensock.svg?raw';
+
+const ICONS: Record<string, string> = {
+  astro, typescript, javascript, tailwindcss, react, supabase,
+  zustand, nodedotjs, postgresql, swagger, css3, thesportsdb, greensock,
+};
+
+// map a free-form tag label ("Tailwind 4", "Node.js") to an icon slug
+const SLUG: Record<string, string> = {
+  'astro': 'astro', 'astro 6': 'astro',
+  'typescript': 'typescript',
+  'javascript': 'javascript',
+  'tailwind': 'tailwindcss', 'tailwind 4': 'tailwindcss', 'tailwind css': 'tailwindcss',
+  'react': 'react', 'react 19': 'react',
+  'supabase': 'supabase',
+  'zustand': 'zustand',
+  'node.js': 'nodedotjs', 'nodejs': 'nodedotjs',
+  'postgresql': 'postgresql',
+  'swagger': 'swagger',
+  'css': 'css3',
+  'thesportsdb': 'thesportsdb',
+  'gsap': 'greensock',
+};
+
+const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?? null;
 ---
 
 <section id="projects" class="relative px-4 sm:px-6 py-28 md:py-40 max-w-6xl mx-auto">
@@ -139,6 +181,9 @@ const total = String(projects.length).padStart(2, '0');
           <div class="proj-info relative order-2 lg:order-1">
             <!-- index + rule + status: one technical header line -->
             <div data-proj-el class="relative flex items-center gap-4 mb-6">
+              <span class="proj-logo-tile shrink-0" aria-hidden="true">
+                <img src={p.logo} alt="" width="24" height="24" loading="lazy" class="w-6 h-6 object-contain" />
+              </span>
               <span class="proj-idx font-mono">{String(i + 1).padStart(2, '0')}</span>
               <span class="proj-idx-rule" aria-hidden="true"></span>
               <span class="flex items-center gap-2 font-mono text-[10px] tracking-widest shrink-0">
@@ -159,9 +204,12 @@ const total = String(projects.length).padStart(2, '0');
               <span data-lang="en">{p.descEn}</span>
             </p>
 
-            <ul data-proj-el class="proj-tags relative flex flex-wrap gap-x-5 gap-y-2 mb-8 font-mono" role="list">
+            <ul data-proj-el class="proj-tags relative flex flex-wrap gap-2.5 mb-8 font-mono" role="list">
               {p.tags.map((t) => (
-                <li class="proj-tag">{t}</li>
+                <li class="proj-tag" title={t}>
+                  {iconFor(t) && <span class="proj-tag-ico" aria-hidden="true" set:html={iconFor(t)} />}
+                  <span class="proj-tag-label">{t}</span>
+                </li>
               ))}
             </ul>
 
@@ -227,11 +275,15 @@ const total = String(projects.length).padStart(2, '0');
 
 <style>
   /* ── Deck / stage ─────────────────────────────────────────────────────
-     On desktop with motion + JS the slides stack absolutely and the deck is
-     pinned; everywhere else they flow as a normal stacked list. */
-  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+     With motion + JS the slides stack absolutely and the deck is pinned so
+     each project hands off to the next in place — on mobile too. Under
+     reduced motion (or no JS) they flow as a normal stacked list. */
+  @media (prefers-reduced-motion: no-preference) {
     html.js-anim .proj-stage {
-      height: min(72vh, 620px);
+      /* one card at a time, centered — sized to leave the card room to breathe
+         within the pinned viewport (svh accounts for mobile browser chrome) */
+      height: min(88vh, 680px);
+      height: min(88svh, 680px);
       display: block;
     }
     html.js-anim .proj-slide {
@@ -242,6 +294,11 @@ const total = String(projects.length).padStart(2, '0');
     }
     /* only the first slide is visible until GSAP takes over */
     html.js-anim .proj-slide:not(:first-child) { opacity: 0; }
+  }
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    html.js-anim .proj-stage {
+      height: min(72vh, 620px);
+    }
   }
 
   /* ── Rolling counter ──────────────────────────────────────────────────── */
@@ -286,18 +343,50 @@ const total = String(projects.length).padStart(2, '0');
     background: var(--pc);
     box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 60%, transparent);
   }
-  /* tags: editorial mono list — no boxes, an accent tick per item */
+  /* tags: technical chips — brand SVG glyph + mono label, accent-tinted icon */
   .proj-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.32rem 0.6rem 0.32rem 0.5rem;
     font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     color: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--pc) 4%, transparent);
+    transition: border-color 0.3s ease, color 0.3s ease, background 0.3s ease;
   }
-  .proj-tag::before {
-    content: '+';
-    margin-right: 0.45em;
-    color: var(--pc);
-    font-weight: 700;
+  .proj-tag:hover {
+    color: var(--color-text);
+    border-color: color-mix(in srgb, var(--pc) 40%, transparent);
+    background: color-mix(in srgb, var(--pc) 9%, transparent);
+  }
+  .proj-tag-ico {
+    display: inline-flex;
+    width: 0.95rem;
+    height: 0.95rem;
+    color: color-mix(in srgb, var(--pc) 82%, white);
+  }
+  .proj-tag-ico :global(svg) {
+    width: 100%;
+    height: 100%;
+    fill: currentColor;
+  }
+  .proj-tag-label { line-height: 1; }
+
+  /* project logo reused as a framed tile in the info header */
+  .proj-logo-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.4rem;
+    border: 1px solid color-mix(in srgb, var(--pc) 30%, transparent);
+    background: color-mix(in srgb, var(--pc) 7%, transparent);
+    box-shadow: 0 0 18px -6px color-mix(in srgb, var(--pc) 45%, transparent);
   }
   .proj-status-dot {
     width: 5px;

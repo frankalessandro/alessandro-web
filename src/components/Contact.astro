@@ -16,10 +16,10 @@ const w3fKey = import.meta.env.PUBLIC_WEB3FORMS_KEY;
     <!-- Col izquierda: descripción + sociales -->
     <div data-anim-contact>
       <p data-i18n="contact.desc" class="text-muted text-sm leading-relaxed mb-8">
-        Si tenés un proyecto en mente, querés que me sume a tu equipo, o simplemente querés conectar — estoy acá. Respondó lo antes posible.
+        Si tienes un proyecto en mente, quieres que me sume a tu equipo, o simplemente quieres conectar — estoy aquí. Respondo lo antes posible.
       </p>
 
-      <p class="font-mono text-xs text-muted tracking-widest uppercase mb-4">También encontrás en</p>
+      <p class="font-mono text-xs text-muted tracking-widest uppercase mb-4">También me encuentras en</p>
       <div class="flex flex-col gap-3">
         <a
           href="https://github.com/frankalessandro"
@@ -101,7 +101,7 @@ const w3fKey = import.meta.env.PUBLIC_WEB3FORMS_KEY;
           name="message"
           rows="5"
           required
-          placeholder="Contame en qué puedo ayudarte..."
+          placeholder="Cuéntame en qué puedo ayudarte..."
           class="bg-bg-2 border border-border rounded-lg px-4 py-2.5 text-sm text-text placeholder:text-muted/50 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors duration-200 resize-none"
         ></textarea>
       </div>
@@ -164,7 +164,7 @@ const w3fKey = import.meta.env.PUBLIC_WEB3FORMS_KEY;
       const oldest     = recent[0];
       const retryInMs  = RL_WINDOW - (Date.now() - oldest);
       const retryInMin = Math.ceil(retryInMs / 60000);
-      showStatus('Demasiados envíos. Podés intentar de nuevo en ' + retryInMin + ' min.', 'text-yellow-400');
+      showStatus('Demasiados envíos. Puedes intentar de nuevo en ' + retryInMin + ' min.', 'text-yellow-400');
       return;
     }
 

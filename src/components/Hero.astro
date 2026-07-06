@@ -1,6 +1,7 @@
 ---
-import avatarImg from "../assets/Avatar.PNG";
-import profileImg from "../assets/Perfil foto.jpeg";
+import { Image } from "astro:assets";
+import avatarImg from "../assets/Avatar.webp";
+import profileImg from "../assets/Perfil foto.webp";
 
 const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
 ---
@@ -95,25 +96,32 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
         class="hero-photo w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 cursor-pointer"
       >
         <div class="hero-photo-frame">
-          <img
-            src={avatarImg.src}
+          <Image
+            src={avatarImg}
             alt="Avatar de GitHub de Frank Roldan"
-            width="480"
-            height="480"
+            width={288}
+            height={288}
+            position="top"
+            densities={[1, 2]}
+            format="webp"
+            quality={95}
             class="hero-photo-img hero-photo-img--avatar"
           />
-          <img
-            src={profileImg.src}
+          <Image
+            src={profileImg}
             alt="Foto de perfil de Frank Roldan"
-            width="480"
-            height="480"
+            width={288}
+            height={288}
+            densities={[1, 2]}
+            format="webp"
+            quality={95}
             class="hero-photo-img hero-photo-img--profile"
           />
         </div>
 
         <span class="hero-photo-corner hero-photo-corner--tl"></span>
         <span class="hero-photo-corner hero-photo-corner--br"></span>
-        <span data-hero-photo-tag class="hero-photo-tag">avatar.png</span>
+        <span data-hero-photo-tag class="hero-photo-tag">avatar</span>
         <span class="hero-photo-hint">tap</span>
       </div>
     </div>
