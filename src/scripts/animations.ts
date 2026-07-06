@@ -211,32 +211,19 @@ function heroNameHover() {
 }
 
 /**
- * Scrambles a mission code (e.g. "MSN-03") through random glyphs before
- * settling on the real value — a tiny "decrypting telemetry" beat.
- */
-function scrambleCode(el: HTMLElement, final: string, frames = 14) {
-  const glyphs = 'ABCDEFGHIKMNSTVX0123456789-·';
-  let f = 0;
-  const id = setInterval(() => {
-    if (f++ >= frames) { el.textContent = final; clearInterval(id); return; }
-    el.textContent = Array.from(final, () =>
-      glyphs[Math.floor(Math.random() * glyphs.length)]
-    ).join('');
-  }, 40);
-}
-
-/**
- * The projects "mission log" choreography:
+ * Projects showcase deck:
  * 1. Section title does a SplitText word reveal (mirrors the other sections).
- * 2. Cards drop out of hyperspace: they fly in from deep z-space, blurred,
- *    and snap into focus with a stagger.
- * 3. As each card lands, its constellation draws itself stroke-by-stroke and
- *    its mission code scrambles into place.
- * 4. Hover: 3D tilt + a glow that tracks the cursor via CSS vars.
+ * 2. Desktop: the deck pins and each project hands off to the next on scroll —
+ *    the info column cascades out, the screenshot clips shut behind a vertical
+ *    hairline that sweeps the full deck, the ghost index rolls over, and the
+ *    next project un-clips from the opposite side. Direction alternates.
+ * 3. Mobile / narrow: no pin — each stacked card gets a clip-reveal + cascade
+ *    as it enters the viewport.
  */
 function projects() {
-  const cards = gsap.utils.toArray<HTMLElement>('[data-project-card]');
-  if (!cards.length) return;
+  const deck = document.querySelector<HTMLElement>('[data-proj-deck]');
+  const slides = gsap.utils.toArray<HTMLElement>('[data-proj-slide]');
+  if (!deck || !slides.length) return;
 
   // Title word reveal
   const titleEl = document.querySelector<HTMLElement>('[data-proj-title]');
@@ -259,73 +246,114 @@ function projects() {
     });
   }
 
-  // Depth of field for the hyperspace entrance
-  const grid = document.querySelector<HTMLElement>('#projects .proj-grid');
-  if (grid) gsap.set(grid, { perspective: 900 });
+  const info = (s: HTMLElement) => s.querySelectorAll<HTMLElement>('[data-proj-el]');
+  const shot = (s: HTMLElement) => s.querySelector<HTMLElement>('[data-proj-clip]')!;
 
-  // Prime each constellation to "undrawn" (same dash trick as the intro logo)
-  cards.forEach((card) => {
-    card.querySelectorAll<SVGPathElement>('.proj-constellation path').forEach((p) => {
-      const len = p.getTotalLength() || 120;
-      gsap.set(p, { strokeDasharray: len, strokeDashoffset: len });
-    });
-    gsap.set(card.querySelectorAll('.proj-constellation circle'), { scale: 0, transformOrigin: '50% 50%' });
-  });
+  const mm = gsap.matchMedia();
 
-  // 2. Hyperspace drop-in
-  gsap.from(cards, {
-    z: -420,
-    y: 80,
-    rotationX: 18,
-    autoAlpha: 0,
-    filter: 'blur(10px)',
-    duration: 0.9,
-    ease: 'power3.out',
-    stagger: 0.1,
-    scrollTrigger: { trigger: '#projects', start: 'top 72%' },
-    onComplete: () => {
-      // Drop the blur rasterization cost once the cards have landed.
-      gsap.set(cards, { clearProps: 'filter' });
-    },
-  });
+  // ── Desktop: deck pinned at screen center, depth hand-offs ─────────────
+  // The active window recedes into the background (scales down, tips back,
+  // fades) while the next one rises from below the fold and settles; the
+  // info column cascades out/in and the index rolls over.
+  mm.add('(min-width: 1024px)', () => {
+    const stage = deck.querySelector<HTMLElement>('[data-proj-stage]')!;
+    const countTrack = deck.querySelector<HTMLElement>('[data-proj-count]');
+    const n = slides.length;
 
-  // 3. Per-card: constellation draw + code scramble as each one enters view
-  cards.forEach((card) => {
-    const codeEl = card.querySelector<HTMLElement>('[data-proj-code]');
-    const finalCode = codeEl?.textContent?.trim() ?? '';
-    const lines = card.querySelectorAll<SVGPathElement>('.proj-constellation path');
-    const stars = card.querySelectorAll('.proj-constellation circle');
+    // Depth of field so the rotateX recede/rise reads as real perspective.
+    gsap.set(stage, { perspective: 1100 });
 
-    ScrollTrigger.create({
-      trigger: card,
-      start: 'top 85%',
-      once: true,
-      onEnter: () => {
-        if (codeEl) scrambleCode(codeEl, finalCode);
-        gsap.to(lines, { strokeDashoffset: 0, duration: 0.9, ease: 'power2.inOut', delay: 0.35 });
-        gsap.to(stars, {
-          scale: 1,
-          duration: 0.4,
-          stagger: 0.12,
-          ease: 'back.out(2.5)',
-          delay: 0.3,
-        });
+    // Only the first slide starts visible (CSS pre-hides the rest).
+    slides.forEach((s, i) => gsap.set(s, { autoAlpha: i === 0 ? 1 : 0 }));
+
+    // Entrance for the first slide: the window rises and settles, then the
+    // info column cascades in.
+    const first = slides[0];
+    gsap.set(shot(first), { y: 70, scale: 0.94, autoAlpha: 0, transformOrigin: '50% 100%' });
+    gsap.set(info(first), { y: 26, autoAlpha: 0 });
+
+    gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      scrollTrigger: { trigger: deck, start: 'top 75%', once: true },
+    })
+      .to(shot(first), { y: 0, scale: 1, autoAlpha: 1, duration: 0.9 })
+      .to(info(first), { y: 0, autoAlpha: 1, stagger: 0.06, duration: 0.5 }, '-=0.5');
+
+    // Scrubbed master timeline: one hand-off per project pair, pinned with
+    // the card centered in the viewport.
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: deck,
+        start: 'center center',
+        end: () => `+=${(n - 1) * 85}%`,
+        pin: true,
+        scrub: 1,
+        anticipatePin: 1,
       },
     });
+
+    for (let i = 0; i < n - 1; i++) {
+      const cur = slides[i];
+      const next = slides[i + 1];
+
+      // dwell so each project holds the stage before handing off
+      tl.to({}, { duration: 0.55 })
+
+        // ── exit: info cascades up, the window recedes into the back
+        .to(info(cur), { y: -26, autoAlpha: 0, stagger: 0.04, duration: 0.35, ease: 'power2.in' })
+        .to(shot(cur), {
+          y: -46,
+          scale: 0.88,
+          rotateX: 9,
+          autoAlpha: 0,
+          transformOrigin: '50% 0%',
+          duration: 0.5,
+          ease: 'power2.in',
+        }, '<0.05')
+
+        .set(cur, { autoAlpha: 0 })
+        .set(next, { autoAlpha: 1 })
+
+        // ── rolling index
+        .to(countTrack, {
+          yPercent: -(100 / n) * (i + 1),
+          duration: 0.4,
+          ease: 'power2.inOut',
+        }, '<')
+
+        // ── enter: the next window rises from beneath and settles flat
+        .fromTo(shot(next),
+          { y: 95, scale: 0.94, rotateX: -9, autoAlpha: 0, transformOrigin: '50% 100%' },
+          {
+            y: 0, scale: 1, rotateX: 0, autoAlpha: 1,
+            duration: 0.6, ease: 'power3.out', immediateRender: false,
+          })
+        .fromTo(info(next),
+          { y: 26, autoAlpha: 0 },
+          {
+            y: 0, autoAlpha: 1, stagger: 0.05,
+            duration: 0.4, ease: 'power3.out', immediateRender: false,
+          }, '<0.15');
+    }
+    // final dwell so the last project isn't cut short
+    tl.to({}, { duration: 0.55 });
   });
 
-  // 4. Desktop hover: 3D tilt + cursor-tracking glow
-  if (finePointer) {
-    cards.forEach((card) => {
-      tilt(card);
-      const setX = gsap.quickSetter(card, '--mx', 'px');
-      const setY = gsap.quickSetter(card, '--my', 'px');
-      card.addEventListener('mousemove', (e) => {
-        const r = card.getBoundingClientRect();
-        setX(e.clientX - r.left);
-        setY(e.clientY - r.top);
-      });
+  // ── Mobile / narrow: stacked cards, window rises per card ──────────────
+  mm.add('(max-width: 1023px)', () => {
+    slides.forEach((slide) => {
+      gsap.timeline({
+        defaults: { ease: 'power3.out' },
+        scrollTrigger: { trigger: slide, start: 'top 80%', once: true },
+      })
+        .from(shot(slide), { y: 50, scale: 0.96, autoAlpha: 0, duration: 0.8 })
+        .from(info(slide), { y: 24, autoAlpha: 0, stagger: 0.06, duration: 0.5 }, '-=0.45');
     });
+  });
+
+  // Desktop hover: subtle 3D tilt on the screenshot window
+  if (finePointer) {
+    slides.forEach((slide) => tilt(shot(slide)));
   }
 }
 
@@ -496,6 +524,8 @@ function init() {
     gsap.set('[data-anim-hero],#about,[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
       { clearProps: 'all' });
     gsap.set('.exp-card', { clearProps: 'clip-path' });
+    // Deck slides are pre-hidden/stacked by CSS on desktop; force them visible.
+    gsap.set('[data-proj-slide],[data-proj-clip],[data-proj-el],[data-proj-num]', { clearProps: 'all', autoAlpha: 1 });
   };
 
   if (reduce) {

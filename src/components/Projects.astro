@@ -1,14 +1,16 @@
 ---
 /**
- * Projects — "mission log" cards. Each personal project is a deployed mission:
- * mission code, orbit status, its own planet (with ring + moon in orbit),
- * a constellation that draws itself on reveal, and HUD corner brackets.
- * Entrance/hover choreography lives in src/scripts/animations.ts (projects()).
+ * Projects — full-bleed showcase deck. One large card per project: screenshot
+ * in a hairline-framed viewport, logo + title, description, stack and links.
+ * On desktop the deck pins and each project hands off to the next with a
+ * line-sweep transition (clip reveal + rolling index) driven by scroll.
+ * Choreography lives in src/scripts/animations.ts (projects()).
  */
 const projects = [
   {
-    code: 'MSN-01',
     title: 'Polla Mundialista 2026',
+    logo: '/projects/polla-fav.png',
+    shot: '/projects/polla.webp',
     descEs:
       'Quiniela para la fase de grupos del Mundial 2026: 72 predicciones por participante, puntos calculados con marcadores reales de TheSportsDB resueltos en build, clasificación con desempates y tablas filtrables. 100% estático.',
     descEn:
@@ -16,14 +18,15 @@ const projects = [
     tags: ['Astro', 'TypeScript', 'Tailwind 4', 'TheSportsDB'],
     repo: 'https://github.com/frankalessandro/polla-mundialista',
     demo: null,
-    statusEs: 'EN ÓRBITA',
-    statusEn: 'IN ORBIT',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
     live: true,
-    planet: '#fbbf24',
+    accent: '#fbbf24',
   },
   {
-    code: 'MSN-02',
     title: 'Forge',
+    logo: '/projects/forge-fav.svg',
+    shot: '/projects/forge.webp',
     descEs:
       'Tracker de entrenamientos de gimnasio, en solitario o en grupo con amigos. Autenticación y datos sobre Supabase (PostgreSQL + RLS), formularios validados con Zod + React Hook Form y estado global con Zustand.',
     descEn:
@@ -31,14 +34,15 @@ const projects = [
     tags: ['React 19', 'Supabase', 'Zustand', 'Tailwind 4'],
     repo: 'https://github.com/frankalessandro/forge',
     demo: null,
-    statusEs: 'EN ÓRBITA',
-    statusEn: 'IN ORBIT',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
     live: true,
-    planet: '#f97316',
+    accent: '#f97316',
   },
   {
-    code: 'MSN-03',
     title: 'ClarBank',
+    logo: '/projects/clarbank-fav.svg',
+    shot: '/projects/clarbank.webp',
     descEs:
       'Simulador bancario full-stack: roles (director, asesor, cajero, cliente), apertura de cuentas con formularios multi-paso, autorización de solicitudes y módulo de caja. API documentada con Swagger. Clasificó a nivel departamental y nacional en el XIII Encuentro de Semilleros de Investigación.',
     descEn:
@@ -46,14 +50,15 @@ const projects = [
     tags: ['React', 'Node.js', 'PostgreSQL', 'Swagger'],
     repo: 'https://github.com/frankalessandro/Simulador_Banca',
     demo: null,
-    statusEs: 'MISIÓN CUMPLIDA',
-    statusEn: 'MISSION COMPLETE',
+    statusEs: 'FINALIZADO',
+    statusEn: 'COMPLETED',
     live: false,
-    planet: '#38bdf8',
+    accent: '#38bdf8',
   },
   {
-    code: 'MSN-04',
     title: 'VotApp',
+    logo: '/projects/votapp-fav.svg',
+    shot: '/projects/votapp.webp',
     descEs:
       'Plataforma de votación electrónica con validación de identidad, usada por ~1200 aprendices del CBI Palmira. Redujo drásticamente el tiempo del proceso electoral frente al conteo manual.',
     descEn:
@@ -61,14 +66,15 @@ const projects = [
     tags: ['Astro', 'JavaScript', 'Tailwind'],
     repo: 'https://github.com/frankalessandro/VotApp',
     demo: 'https://vot-app.vercel.app',
-    statusEs: 'EN ÓRBITA',
-    statusEn: 'IN ORBIT',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
     live: true,
-    planet: '#6ee7b7',
+    accent: '#6ee7b7',
   },
   {
-    code: 'MSN-05',
     title: 'Felinas Web',
+    logo: '/projects/felinas-fav.svg',
+    shot: '/projects/felinas.webp',
     descEs:
       'Sitio oficial de Pantera Felinas, academia de danza urbana femenina: landing con selector de sección, página de academia (estilos, planes, FAQ), sección de shows, animaciones on-scroll y agendamiento por WhatsApp.',
     descEn:
@@ -76,14 +82,15 @@ const projects = [
     tags: ['Astro 6', 'React', 'Tailwind'],
     repo: 'https://github.com/frankalessandro/felinas-web',
     demo: null,
-    statusEs: 'EN ÓRBITA',
-    statusEn: 'IN ORBIT',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
     live: true,
-    planet: '#a78bfa',
+    accent: '#a78bfa',
   },
   {
-    code: 'MSN-06',
     title: 'Spa Salud y Vida',
+    logo: '/projects/spa-fav.svg',
+    shot: '/projects/spa.webp',
     descEs:
       'Sitio web para un spa y centro de bienestar: presentación de servicios y captación de clientes, construido estático con Astro y desplegado en Vercel.',
     descEn:
@@ -91,193 +98,207 @@ const projects = [
     tags: ['Astro', 'TypeScript', 'CSS'],
     repo: 'https://github.com/frankalessandro/spasaludyvida',
     demo: 'https://spasaludyvida.vercel.app',
-    statusEs: 'EN ÓRBITA',
-    statusEn: 'IN ORBIT',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
     live: true,
-    planet: '#22d3ee',
+    accent: '#22d3ee',
   },
 ];
+
+const total = String(projects.length).padStart(2, '0');
 ---
 
 <section id="projects" class="relative px-4 sm:px-6 py-28 md:py-40 max-w-6xl mx-auto">
-  <!-- Decorative deep-space orbit rings behind the grid -->
-  <div class="proj-orbits pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-    <span class="proj-ring proj-ring-a"></span>
-    <span class="proj-ring proj-ring-b"></span>
-  </div>
-
   <p data-i18n="projects.label" data-anim-head class="relative text-accent font-mono text-xs tracking-widest uppercase mb-3">Proyectos</p>
-  <h2 data-i18n="projects.title" data-proj-title class="relative text-3xl font-black text-text tracking-tight">Misiones desplegadas</h2>
-  <p data-i18n="projects.sub" data-anim-head class="relative text-muted text-sm mt-3 mb-12 font-mono">
-    Proyectos personales, construidos fuera de mi órbita laboral.
+  <h2 data-i18n="projects.title" data-proj-title class="relative text-3xl font-black text-text tracking-tight">Trabajo seleccionado</h2>
+  <p data-i18n="projects.sub" data-anim-head class="relative text-muted text-sm mt-3 mb-14 font-mono">
+    Proyectos personales, diseñados y construidos de principio a fin.
   </p>
 
-  <div class="proj-grid relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-    {projects.map((p) => (
-      <article
-        data-project-card
-        data-particle-hover
-        class="proj-card group relative rounded-xl border border-border bg-bg-2 p-5 sm:p-6 flex flex-col gap-4 overflow-hidden"
-        style={`--planet: ${p.planet};`}
-      >
-        <!-- cursor-tracking glow (position driven from animations.ts) -->
-        <span class="proj-glow" aria-hidden="true"></span>
+  <div class="proj-deck relative" data-proj-deck>
+    <!-- rolling index: 01 → 06 -->
+    <div class="proj-counter absolute -top-9 right-0 hidden lg:flex items-baseline gap-1.5 font-mono text-xs tracking-widest text-muted" aria-hidden="true">
+      <span class="proj-counter-viewport">
+        <span class="proj-counter-track" data-proj-count>
+          {projects.map((_, i) => (
+            <span class="proj-counter-item text-text">{String(i + 1).padStart(2, '0')}</span>
+          ))}
+        </span>
+      </span>
+      <span class="opacity-60">/ {total}</span>
+    </div>
 
-        <!-- HUD corner brackets -->
-        <span class="proj-corner proj-corner-tl" aria-hidden="true"></span>
-        <span class="proj-corner proj-corner-tr" aria-hidden="true"></span>
-        <span class="proj-corner proj-corner-bl" aria-hidden="true"></span>
-        <span class="proj-corner proj-corner-br" aria-hidden="true"></span>
+    <div class="proj-stage relative flex flex-col gap-20 lg:gap-0" data-proj-stage>
+      {projects.map((p, i) => (
+        <article
+          data-proj-slide
+          class="proj-slide grid grid-cols-1 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] gap-8 lg:gap-14 items-center"
+          style={`--pc: ${p.accent};`}
+        >
+          <!-- ── Info column ─────────────────────────────────────────── -->
+          <div class="proj-info relative order-2 lg:order-1">
+            <!-- index + rule + status: one technical header line -->
+            <div data-proj-el class="relative flex items-center gap-4 mb-6">
+              <span class="proj-idx font-mono">{String(i + 1).padStart(2, '0')}</span>
+              <span class="proj-idx-rule" aria-hidden="true"></span>
+              <span class="flex items-center gap-2 font-mono text-[10px] tracking-widest shrink-0">
+                <span class={`proj-status-dot ${p.live ? 'bg-accent' : 'bg-sky-400'}`}></span>
+                <span class={p.live ? 'text-accent/80' : 'text-sky-400/80'}>
+                  <span data-lang="es">{p.statusEs}</span>
+                  <span data-lang="en">{p.statusEn}</span>
+                </span>
+              </span>
+            </div>
 
-        <!-- constellation that draws itself on reveal -->
-        <svg class="proj-constellation absolute top-3 right-4 w-20 h-12 opacity-40" viewBox="0 0 80 48" fill="none" aria-hidden="true">
-          <path d="M6 38 L26 14 L46 26 L66 8" stroke="var(--planet)" stroke-width="1" />
-          <circle cx="6" cy="38" r="1.6" fill="var(--planet)" />
-          <circle cx="26" cy="14" r="2.2" fill="var(--planet)" />
-          <circle cx="46" cy="26" r="1.4" fill="var(--planet)" />
-          <circle cx="66" cy="8" r="1.8" fill="var(--planet)" />
-        </svg>
+            <h3 data-proj-el class="proj-title relative text-text font-black text-3xl sm:text-4xl tracking-tight mb-6">
+              {p.title}
+            </h3>
 
-        <!-- mission header: code + status -->
-        <div class="relative flex items-center justify-between font-mono text-[10px] tracking-widest">
-          <span data-proj-code class="text-muted/70">{p.code}</span>
-          <span class={`flex items-center gap-1.5 ${p.live ? 'text-accent/80' : 'text-sky-400/80'}`}>
-            <span class={`proj-status-dot ${p.live ? 'bg-accent' : 'bg-sky-400'}`}></span>
-            <span data-lang="es">{p.statusEs}</span>
-            <span data-lang="en">{p.statusEn}</span>
-          </span>
-        </div>
+            <p data-proj-el class="relative text-muted text-sm leading-relaxed mb-6 max-w-prose">
+              <span data-lang="es">{p.descEs}</span>
+              <span data-lang="en">{p.descEn}</span>
+            </p>
 
-        <!-- planet with ring + orbiting moon -->
-        <div class="relative h-14 flex items-center">
-          <div class="proj-planet-wrap">
-            <span class="proj-planet"></span>
-            <span class="proj-planet-ring" aria-hidden="true"></span>
-            <span class="proj-moon-orbit" aria-hidden="true"><span class="proj-moon"></span></span>
-          </div>
-        </div>
+            <ul data-proj-el class="proj-tags relative flex flex-wrap gap-x-5 gap-y-2 mb-8 font-mono" role="list">
+              {p.tags.map((t) => (
+                <li class="proj-tag">{t}</li>
+              ))}
+            </ul>
 
-        <div class="relative flex items-start justify-between gap-2">
-          <h3 class="text-text font-semibold text-base tracking-tight">{p.title}</h3>
-          <div class="flex gap-3 shrink-0 font-mono text-xs">
-            <a
-              href={p.repo}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-muted hover:text-accent transition-colors"
-              title="Repositorio"
-              aria-label={`Repositorio de ${p.title}`}
-            >
-              [gh]
-            </a>
-            {p.demo && (
+            <div data-proj-el class="relative flex gap-3 font-mono text-xs">
               <a
-                href={p.demo}
+                href={p.repo}
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-muted hover:text-accent transition-colors"
-                title="Demo"
-                aria-label={`Demo de ${p.title}`}
+                class="btn-reticle px-4 py-2 border border-border rounded text-text hover:border-accent/40 transition-colors"
+                aria-label={`Código de ${p.title} en GitHub`}
               >
-                [↗]
+                <span data-lang="es">Código</span><span data-lang="en">Source</span>
               </a>
-            )}
+              {p.demo && (
+                <a
+                  href={p.demo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-reticle px-4 py-2 border border-accent/30 bg-accent/5 rounded text-accent hover:bg-accent/10 transition-colors"
+                  aria-label={`Sitio de ${p.title}`}
+                >
+                  <span data-lang="es">Ver sitio ↗</span><span data-lang="en">Visit site ↗</span>
+                </a>
+              )}
+            </div>
           </div>
-        </div>
 
-        <p class="relative text-muted text-sm leading-relaxed flex-1">
-          <span data-lang="es">{p.descEs}</span>
-          <span data-lang="en">{p.descEn}</span>
-        </p>
-
-        <div class="relative flex flex-wrap gap-2 mt-auto">
-          {p.tags.map((t) => (
-            <span class="text-xs px-2 py-0.5 rounded font-mono text-accent border border-accent/20 bg-accent/5">
-              {t}
-            </span>
-          ))}
-        </div>
-      </article>
-    ))}
+          <!-- ── Screenshot window ───────────────────────────────────── -->
+          <div class="proj-shot-wrap relative order-1 lg:order-2" data-proj-clip data-particle-hover>
+            <figure class="proj-shot relative rounded-lg border border-border bg-bg-2 overflow-hidden">
+              <!-- browser chrome: dots + favicon tab + hairline -->
+              <div class="proj-shot-bar flex items-center gap-1.5 px-3 py-2 border-b border-border">
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-dot"></span>
+                <span class="proj-shot-tab ml-3 flex items-center gap-2">
+                  <img src={p.logo} alt="" width="14" height="14" loading="lazy" class="w-3.5 h-3.5 object-contain" />
+                  <span class="font-mono text-[10px] tracking-wide text-muted lowercase">{p.title}</span>
+                </span>
+                <span class="ml-3 flex-1 h-px bg-border"></span>
+              </div>
+              <div class="proj-shot-viewport overflow-hidden">
+                <img
+                  src={p.shot}
+                  alt={`Captura de ${p.title}`}
+                  width="1440"
+                  height="900"
+                  loading="lazy"
+                  data-proj-img
+                  class="w-full h-auto block"
+                />
+              </div>
+              <!-- accent hairlines extending past the frame -->
+              <span class="proj-shot-ext proj-shot-ext-t" aria-hidden="true"></span>
+              <span class="proj-shot-ext proj-shot-ext-b" aria-hidden="true"></span>
+            </figure>
+          </div>
+        </article>
+      ))}
+    </div>
   </div>
 </section>
 
 <style>
-  /* ── Deep-space deco: huge slow orbit rings behind the grid ─────────── */
-  .proj-ring {
-    position: absolute;
-    border: 1px dashed rgba(110, 231, 183, 0.08);
-    border-radius: 50%;
-  }
-  .proj-ring-a {
-    width: 900px;
-    height: 900px;
-    top: -200px;
-    right: -350px;
-    animation: proj-spin 90s linear infinite;
-  }
-  .proj-ring-b {
-    width: 600px;
-    height: 600px;
-    bottom: -250px;
-    left: -250px;
-    border-color: rgba(56, 189, 248, 0.07);
-    animation: proj-spin 70s linear infinite reverse;
-  }
-  @keyframes proj-spin {
-    to { transform: rotate(360deg); }
+  /* ── Deck / stage ─────────────────────────────────────────────────────
+     On desktop with motion + JS the slides stack absolutely and the deck is
+     pinned; everywhere else they flow as a normal stacked list. */
+  @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+    html.js-anim .proj-stage {
+      height: min(72vh, 620px);
+      display: block;
+    }
+    html.js-anim .proj-slide {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+    }
+    /* only the first slide is visible until GSAP takes over */
+    html.js-anim .proj-slide:not(:first-child) { opacity: 0; }
   }
 
-  /* ── Card chrome ─────────────────────────────────────────────────────── */
-  .proj-card {
-    transition: border-color 0.4s ease, box-shadow 0.5s ease;
-    /* subtle nebula tint from the card's own planet color */
-    background-image: radial-gradient(
-      120% 90% at 85% -10%,
-      color-mix(in srgb, var(--planet) 6%, transparent),
-      transparent 55%
+  /* ── Rolling counter ──────────────────────────────────────────────────── */
+  .proj-counter-viewport {
+    display: inline-block;
+    height: 1em;
+    line-height: 1;
+    overflow: hidden;
+  }
+  .proj-counter-track { display: block; }
+  .proj-counter-item { display: block; height: 1em; line-height: 1; }
+
+  /* ── Info column chrome ──────────────────────────────────────────────── */
+  /* index: solid mono digits in the project's accent, sitting on a hairline
+     rule that fades toward the status readout */
+  .proj-idx {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    color: color-mix(in srgb, var(--pc) 85%, white);
+    text-shadow: 0 0 22px color-mix(in srgb, var(--pc) 45%, transparent);
+  }
+  .proj-idx-rule {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--pc) 55%, transparent),
+      color-mix(in srgb, var(--pc) 12%, transparent)
     );
   }
-  .proj-card:hover {
-    border-color: color-mix(in srgb, var(--planet) 35%, transparent);
-    box-shadow: 0 18px 60px -18px color-mix(in srgb, var(--planet) 30%, transparent);
-  }
-
-  /* cursor-tracking glow — --mx/--my updated by GSAP quickSetter */
-  .proj-glow {
+  /* title carries a short accent bar underneath — the section's signature line */
+  .proj-title { padding-bottom: 0.9rem; }
+  .proj-title::after {
+    content: '';
     position: absolute;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.4s ease;
-    background: radial-gradient(
-      220px circle at var(--mx, 50%) var(--my, 50%),
-      color-mix(in srgb, var(--planet) 10%, transparent),
-      transparent 65%
-    );
+    left: 0;
+    bottom: 0;
+    width: 3rem;
+    height: 2px;
+    background: var(--pc);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--pc) 60%, transparent);
   }
-  .proj-card:hover .proj-glow { opacity: 1; }
-
-  /* HUD corner brackets — light up in the planet's color on hover */
-  .proj-corner {
-    position: absolute;
-    width: 12px;
-    height: 12px;
-    border: 1px solid rgba(240, 240, 240, 0.12);
-    transition: border-color 0.4s ease, width 0.35s ease, height 0.35s ease;
-    pointer-events: none;
+  /* tags: editorial mono list — no boxes, an accent tick per item */
+  .proj-tag {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--color-muted);
   }
-  .proj-corner-tl { top: 6px; left: 6px; border-right: 0; border-bottom: 0; }
-  .proj-corner-tr { top: 6px; right: 6px; border-left: 0; border-bottom: 0; }
-  .proj-corner-bl { bottom: 6px; left: 6px; border-right: 0; border-top: 0; }
-  .proj-corner-br { bottom: 6px; right: 6px; border-left: 0; border-top: 0; }
-  .proj-card:hover .proj-corner {
-    border-color: color-mix(in srgb, var(--planet) 70%, transparent);
-    width: 18px;
-    height: 18px;
+  .proj-tag::before {
+    content: '+';
+    margin-right: 0.45em;
+    color: var(--pc);
+    font-weight: 700;
   }
-
-  /* blinking status dot (reuses the global `blink` keyframes) */
   .proj-status-dot {
     width: 5px;
     height: 5px;
@@ -285,67 +306,43 @@ const projects = [
     animation: blink 1.6s ease-in-out infinite;
   }
 
-  /* ── The planet: sphere + tilted ring + moon in orbit ───────────────── */
-  .proj-planet-wrap {
-    position: relative;
-    width: 44px;
-    height: 44px;
-  }
-  .proj-planet {
-    position: absolute;
-    inset: 4px;
-    border-radius: 50%;
-    background:
-      radial-gradient(circle at 32% 28%,
-        color-mix(in srgb, var(--planet) 95%, white),
-        var(--planet) 42%,
-        color-mix(in srgb, var(--planet) 35%, #000) 78%,
-        color-mix(in srgb, var(--planet) 15%, #000) 100%);
-    box-shadow:
-      0 0 18px -2px color-mix(in srgb, var(--planet) 45%, transparent),
-      inset -4px -4px 10px rgba(0, 0, 0, 0.55);
-  }
-  .proj-planet-ring {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 64px;
-    height: 64px;
-    margin: -32px 0 0 -32px;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--planet) 40%, transparent);
-    transform: rotateX(72deg) rotateZ(-18deg);
+  /* ── Screenshot frame ────────────────────────────────────────────────── */
+  .proj-shot {
+    box-shadow: 0 24px 80px -24px color-mix(in srgb, var(--pc) 25%, transparent);
     transition: border-color 0.4s ease;
   }
-  .proj-card:hover .proj-planet-ring {
-    border-color: color-mix(in srgb, var(--planet) 75%, transparent);
+  .proj-slide:hover .proj-shot {
+    border-color: color-mix(in srgb, var(--pc) 40%, transparent);
   }
-  .proj-moon-orbit {
+  .proj-shot-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--pc) 55%, transparent);
+  }
+  /* favicon "tab" in the window bar */
+  .proj-shot-tab {
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--pc) 22%, transparent);
+    background: color-mix(in srgb, var(--pc) 6%, transparent);
+  }
+  /* accent hairlines shooting out horizontally past the frame edges */
+  .proj-shot-ext {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 64px;
-    height: 64px;
-    margin: -32px 0 0 -32px;
-    transform: rotateX(72deg) rotateZ(-18deg);
-    animation: proj-orbit 5.5s linear infinite;
+    height: 1px;
+    width: 3rem;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--pc) 60%, transparent), transparent);
+    pointer-events: none;
   }
-  .proj-moon {
-    position: absolute;
-    top: -2px;
-    left: 50%;
-    width: 4px;
-    height: 4px;
-    margin-left: -2px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--planet) 80%, white);
-    box-shadow: 0 0 6px 1px color-mix(in srgb, var(--planet) 60%, transparent);
-  }
-  @keyframes proj-orbit {
-    to { transform: rotateX(72deg) rotateZ(342deg); }
+  .proj-shot-ext-t { top: 0; left: 100%; }
+  .proj-shot-ext-b {
+    bottom: 0;
+    right: 100%;
+    transform: rotate(180deg);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .proj-ring, .proj-moon-orbit, .proj-status-dot { animation: none; }
+    .proj-status-dot { animation: none; }
   }
 </style>
