@@ -21,11 +21,13 @@ const { class: className = '' } = Astro.props;
   stroke-linejoin="round"
   aria-hidden="true"
 >
+  <!-- pathLength normalizes every stroke to 24 units so the intro loader can
+       animate all three with a single dash value. -->
   <g class="logo-left">
-    <path d="M6 8 L2 12 L6 16" />
+    <path d="M6 8 L2 12 L6 16" pathLength="24" />
   </g>
   <g class="logo-right">
-    <path d="M14.5 4 L9.5 20" />
-    <path d="M18 16 L22 12 L18 8" />
+    <path d="M14.5 4 L9.5 20" pathLength="24" />
+    <path d="M18 16 L22 12 L18 8" pathLength="24" />
   </g>
 </svg>

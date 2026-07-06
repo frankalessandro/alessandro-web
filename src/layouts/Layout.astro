@@ -51,13 +51,20 @@ const {
     </noscript>
   </head>
   <body>
-    <!-- Intro loader: the brand mark assembles, then the screen splits open.
-         Shown only when JS is on (html.js-anim) so no-JS users never get a
-         stuck overlay; GSAP removes it once the intro plays. -->
+    <!-- Intro loader: CSS-first so it's alive from the very first paint — the
+         `</>` glyph draws itself, a terminal caret blinks and a progress line
+         fills, all without waiting for the JS bundle. GSAP takes over when
+         ready and sweeps the veil away. Shown only when JS is on (html.js-anim)
+         so no-JS users never get a stuck overlay. -->
     <div id="intro-loader" aria-hidden="true">
-      <div class="intro-panel intro-panel-l"></div>
-      <div class="intro-panel intro-panel-r"></div>
-      <Logo class="intro-logo" />
+      <div class="intro-veil"></div>
+      <div class="intro-content">
+        <div class="intro-mark">
+          <Logo class="intro-logo" />
+          <span class="intro-caret"></span>
+        </div>
+        <div class="intro-progress"><span class="intro-progress-fill"></span></div>
+      </div>
     </div>
 
     <!-- Global starfield -->
@@ -78,8 +85,7 @@ const {
     <button
       id="back-to-top"
       aria-label="Volver arriba"
-      data-magnetic="0.3"
-      class="fixed bottom-6 right-6 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-bg-2/80 backdrop-blur-sm text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 pointer-events-none text-xs font-mono"
+      class="btn-reticle fixed bottom-6 right-6 z-50 flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border bg-bg-2/80 backdrop-blur-sm text-muted hover:text-accent hover:border-accent/40 transition-all duration-200 opacity-0 pointer-events-none text-xs font-mono"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="18 15 12 9 6 15"/>
@@ -147,9 +153,6 @@ const {
           // "Antigravity" hover boost: toggled by [data-particle-hover] enter/leave,
           // smoothed each frame. Idle = gentle attraction; boosted = repulsion + brighter links.
           let hoverTarget = 0, hoverCur = 0;
-          // Scroll-warp: streak length tracks scroll speed, direction tracks scroll sign.
-          let lastScrollY = window.scrollY;
-          let warp = 0, warpDir = 1;
           // Shooting stars (ambient, self-scheduled) + click supernovas (an
           // expanding ring that shoves nearby stars away).
           interface Meteor { x: number; y: number; vx: number; vy: number; born: number; dur: number; len: number; }
@@ -169,21 +172,13 @@ const {
           }
 
           function buildStars() {
-            const base = Math.floor((width * height) / 5500);
-            const count = Math.min(lowPower ? 280 : 322, lowPower ? base : Math.floor(base * 1.15));
+            const base = Math.floor((width * height) / 4800);
+            const count = Math.min(lowPower ? 320 : 390, lowPower ? base : Math.floor(base * 1.15));
+            // Uniform distribution across the whole viewport; the text guard
+            // keeps copy readable, so no need to bias stars away from center.
             stars = Array.from({ length: count }, () => {
-              // Desktop: 60% of stars biased toward the side strips, 40% free.
-              let x: number;
-              if (!lowPower) {
-                const r = Math.random();
-                x = r < 0.30 ? Math.random() * width * 0.22
-                  : r < 0.60 ? width * 0.78 + Math.random() * width * 0.22
-                  : Math.random() * width;
-              } else {
-                x = Math.random() * width;
-              }
               return {
-              x,
+              x: Math.random() * width,
               y: Math.random() * height,
               r: rand(0.5, 1.8),
               depth: rand(0.2, 1),
@@ -242,21 +237,58 @@ const {
           // the per-frame spring/line work isn't worth it on phones.
           const enableField = !reduceMotion && !lowPower;
 
+          // ── Text guard ────────────────────────────────────────────────────
+          // Stars fade out under headings/paragraphs so copy stays readable —
+          // matters most on mobile, where text spans nearly the full width.
+          // Element list is collected once (plus on resize); their viewport
+          // rects are re-read each frame so scroll/reveal animations track.
+          const GUARD_FADE = 36; // px of soft falloff around each text block
+          const GUARD_MIN = 0.12; // alpha multiplier right under the text
+          let guardEls: HTMLElement[] = [];
+          interface GuardRect { l: number; t: number; r: number; b: number; }
+          const guardRects: GuardRect[] = [];
+
+          function collectGuardEls() {
+            guardEls = Array.from(
+              document.querySelectorAll<HTMLElement>('main :is(h1, h2, h3, h4, p)')
+            );
+          }
+
+          function updateGuardRects() {
+            guardRects.length = 0;
+            for (const el of guardEls) {
+              const r = el.getBoundingClientRect();
+              if (r.width === 0 || r.bottom < -GUARD_FADE || r.top > height + GUARD_FADE) continue;
+              guardRects.push({ l: r.left, t: r.top, r: r.right, b: r.bottom });
+            }
+          }
+
+          /** 1 = fully visible, GUARD_MIN = right under text, smooth in between. */
+          function guardDim(x: number, y: number): number {
+            let dim = 1;
+            for (const g of guardRects) {
+              const dx = x < g.l ? g.l - x : x > g.r ? x - g.r : 0;
+              if (dx > GUARD_FADE) continue;
+              const dy = y < g.t ? g.t - y : y > g.b ? y - g.b : 0;
+              if (dy > GUARD_FADE) continue;
+              const f = GUARD_MIN + (1 - GUARD_MIN) * (Math.max(dx, dy) / GUARD_FADE);
+              if (f < dim) dim = f;
+              if (dim <= GUARD_MIN + 0.01) return dim;
+            }
+            return dim;
+          }
+
           let rafId = 0;
           const start = performance.now();
           function draw(now: number) {
             const t = (now - start) / 1000;
             ctx.clearRect(0, 0, width, height);
+            updateGuardRects();
             cx += (px - cx) * 0.05;
             cy += (py - cy) * 0.05;
 
-            // Smooth the hover boost and read scroll velocity for the warp streaks.
+            // Smooth the hover boost.
             hoverCur += (hoverTarget - hoverCur) * 0.12;
-            const sy = window.scrollY;
-            const rawVel = sy - lastScrollY;
-            lastScrollY = sy;
-            if (Math.abs(rawVel) > 0.5) warpDir = rawVel > 0 ? 1 : -1;
-            warp += (Math.min(Math.abs(rawVel), 60) - warp) * 0.12;
 
             // Frame delta (clamped so a background-tab pause can't teleport meteors).
             const dt = Math.min(Math.max(t - lastT, 0), 0.05);
@@ -264,9 +296,9 @@ const {
 
             // Ambient shooting star: every so often one streaks across the top half.
             if (!reduceMotion) {
-              if (meteorNext === 0) meteorNext = t + rand(2, 6);
+              if (meteorNext === 0) meteorNext = t + rand(1.5, 4);
               if (t >= meteorNext) {
-                meteorNext = t + rand(5, 12);
+                meteorNext = t + rand(3.5, 8);
                 const fromLeft = Math.random() < 0.5;
                 const speed = rand(520, 820);
                 const ang = fromLeft ? rand(0.25, 0.5) : Math.PI - rand(0.25, 0.5);
@@ -341,8 +373,14 @@ const {
               // glow briefly expands the star radius too
               const rad = (s.r * (0.6 + s.depth * 0.6)) * (1 + glowBoost * 0.5);
 
-              // Collect stars within cursor range so we can wire them up afterwards.
-              if (enableField && mx > -9000) {
+              // Text guard: fade the star (and its glow) when it sits under copy.
+              const dim = guardRects.length ? guardDim(rx, ry) : 1;
+              if (dim <= GUARD_MIN + 0.01) continue; // fully hidden under text
+              const a = alpha * dim;
+
+              // Collect stars within cursor range so we can wire them up
+              // afterwards — dimmed ones stay out so lines don't cross text.
+              if (enableField && mx > -9000 && dim > 0.5) {
                 const ldx = rx - mx, ldy = ry - my;
                 const ld2 = ldx * ldx + ldy * ldy;
                 if (ld2 < fieldR2) near.push({ x: rx, y: ry, a: 1 - Math.sqrt(ld2) / fieldR });
@@ -352,32 +390,20 @@ const {
                 s.tone === 'accent' ? 'rgba(110,231,183,0.9)'
                 : s.tone === 'gray' ? 'rgba(160,160,170,0.8)'
                 : 'rgba(240,240,240,0.8)';
-              ctx.shadowBlur = glowBoost > 0.05
+              ctx.shadowBlur = dim < 0.6 ? 0 : glowBoost > 0.05
                 ? 8 + glowBoost * 16
                 : (!lowPower && s.depth > 0.6 ? 6 : 0);
               ctx.shadowColor = glowColor;
 
               const fill =
-                s.tone === 'accent' ? `rgba(110,231,183,${alpha})`
-                : s.tone === 'gray' ? `rgba(160,160,170,${alpha})`
-                : `rgba(240,240,240,${alpha})`;
+                s.tone === 'accent' ? `rgba(110,231,183,${a})`
+                : s.tone === 'gray' ? `rgba(160,160,170,${a})`
+                : `rgba(240,240,240,${a})`;
 
-              // While scrolling fast, draw the star as a streak; otherwise a dot.
-              if (warp > 1) {
-                const len = Math.min(warp * s.depth * 0.9, 34);
-                ctx.strokeStyle = fill;
-                ctx.lineWidth = rad * 1.4;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(rx, ry);
-                ctx.lineTo(rx, ry + warpDir * len);
-                ctx.stroke();
-              } else {
-                ctx.beginPath();
-                ctx.arc(rx, ry, rad, 0, Math.PI * 2);
-                ctx.fillStyle = fill;
-                ctx.fill();
-              }
+              ctx.beginPath();
+              ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+              ctx.fillStyle = fill;
+              ctx.fill();
             }
 
             // Constellation lines: link near-cursor stars to each other and to the
@@ -424,7 +450,9 @@ const {
               if (age > m.dur) { meteors.splice(i, 1); continue; }
               m.x += m.vx * dt;
               m.y += m.vy * dt;
-              const a = Math.sin((age / m.dur) * Math.PI);
+              // Fade the whole meteor while its head crosses a text block.
+              const mDim = guardRects.length ? guardDim(m.x, m.y) : 1;
+              const a = Math.sin((age / m.dur) * Math.PI) * mDim;
               const sp = Math.hypot(m.vx, m.vy) || 1;
               const tx = m.x - (m.vx / sp) * m.len;
               const ty = m.y - (m.vy / sp) * m.len;
@@ -516,6 +544,7 @@ const {
           });
 
           rebuild();
+          collectGuardEls();
 
           // The intro overlay covers the canvas, so don't burn CPU/GPU drawing
           // stars behind it — that contention is what makes the intro feel
@@ -526,7 +555,7 @@ const {
             let started = false;
             const go = () => { if (started) return; started = true; startLoop(); };
             window.addEventListener('intro:done', go, { once: true });
-            window.setTimeout(go, 4200);
+            window.setTimeout(go, 3400);
           } else {
             startLoop();
           }

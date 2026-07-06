@@ -8,21 +8,19 @@ const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = window.matchMedia('(pointer: fine)').matches;
 
 /**
- * Intro loader: the brand mark's two halves (`<` and `/>`) fly in and assemble,
- * hold for a beat, then the screen splits down the middle and slides open to
- * reveal the page. `onDone` fires as the panels part so the hero animates in
- * behind them. Resolves immediately if the loader markup isn't present.
+ * Intro loader exit. The entrance is pure CSS (glyph self-draws, caret blinks,
+ * progress fills) so the loader is alive from the first paint even while this
+ * bundle is still downloading — GSAP only choreographs the way out: complete
+ * the progress, pop the mark up and off, sweep the veil away. `onDone` fires
+ * mid-sweep so the hero animates in behind it.
  */
 function introLoader(onDone: () => void) {
   const loader = document.getElementById('intro-loader');
   if (!loader) { onDone(); return; }
 
-  const left   = loader.querySelector<SVGGElement>('.logo-left');
-  const right  = loader.querySelector<SVGGElement>('.logo-right');
-  const logo   = loader.querySelector<SVGSVGElement>('.intro-logo');
-  const panelL = loader.querySelector<HTMLElement>('.intro-panel-l');
-  const panelR = loader.querySelector<HTMLElement>('.intro-panel-r');
-  const paths  = Array.from(loader.querySelectorAll<SVGPathElement>('.intro-logo path'));
+  const content = loader.querySelector<HTMLElement>('.intro-content');
+  const veil    = loader.querySelector<HTMLElement>('.intro-veil');
+  const fill    = loader.querySelector<HTMLElement>('.intro-progress-fill');
 
   let revealed = false;
   const reveal = () => {
@@ -37,54 +35,46 @@ function introLoader(onDone: () => void) {
   const safety = window.setTimeout(() => {
     gsap.set(loader, { display: 'none' });
     reveal();
-  }, 4000);
+  }, 3000);
+
+  // Hold only long enough for the CSS draw to read (~1s from navigation start).
+  // On slow connections the bundle arrives later than that, so hold is 0 and
+  // we exit immediately — the CSS entrance already filled the wait.
+  const hold = Math.max(0, 1 - performance.now() / 1000);
+
+  // Take over the progress bar exactly where its CSS animation currently is,
+  // then kill the animation so the GSAP tween isn't overridden by it.
+  if (fill) {
+    const m = new DOMMatrixReadOnly(getComputedStyle(fill).transform);
+    fill.style.animation = 'none';
+    gsap.set(fill, { scaleX: m.a });
+  }
+  // Same for the content pop-in (its final frame is identity, so no jump).
+  if (content) content.style.animation = 'none';
 
   const tl = gsap.timeline({
+    delay: hold,
     defaults: { ease: 'power3.out', force3D: true },
     onComplete: () => {
       window.clearTimeout(safety);
       gsap.set(loader, { display: 'none' });
       // Drop the promoted layers once we're done with them.
-      gsap.set([logo, panelL, panelR], { clearProps: 'willChange' });
+      gsap.set([content, veil], { clearProps: 'willChange' });
     },
   });
 
-  // Prime each stroke to "undrawn" so the glyph can draw itself on.
-  paths.forEach((p) => {
-    const len = p.getTotalLength() || 100;
-    gsap.set(p, { strokeDasharray: len, strokeDashoffset: len, autoAlpha: 1 });
-  });
-  gsap.set([left, right], { autoAlpha: 1, xPercent: 0 });
-  gsap.set(logo, { scale: 0.82, autoAlpha: 1 });
+  // 1. Progress snaps to done and the mark gives a confident little pop.
+  tl.to(fill, { scaleX: 1, duration: 0.2, ease: 'power1.inOut' })
+    .to(content, { scale: 1.05, duration: 0.2, ease: 'power2.out' }, '<')
 
-  // 1. The glyph draws itself, stroke by stroke (`<` → `/` → `>`).
-  tl.to(paths, {
-    strokeDashoffset: 0,
-    duration: 0.55,
-    stagger: 0.13,
-    ease: 'power2.inOut',
-  })
-    .to(logo, { scale: 1, duration: 0.5, ease: 'back.out(2.2)' }, '<0.1')
+    // 2. The mark launches up and out…
+    .to(content, { y: -48, autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, '+=0.05')
 
-    // 2. A calm beat — a gentle breath so the mark reads before it leaves.
-    .to(logo, { scale: 1.05, duration: 0.55, ease: 'sine.inOut' }, '+=0.1')
+    // 3. …and the veil sweeps up after it, its accent edge leading the wipe.
+    .to(veil, { yPercent: -100.5, duration: 0.6, ease: 'power4.inOut' }, '-=0.22')
 
-    // 3. Dissolve: the strokes un-draw themselves (a mirror of the entrance),
-    //    last-drawn first, while the mark eases up and out. Striking but sober.
-    .to(paths, {
-      strokeDashoffset: (_i, t) => (t as SVGPathElement).getTotalLength() || 100,
-      duration: 0.5,
-      stagger: { each: 0.09, from: 'end' },
-      ease: 'power2.in',
-    }, '+=0.05')
-    .to(logo, { scale: 1.18, y: -14, autoAlpha: 0, duration: 0.6, ease: 'power2.in' }, '<')
-
-    // 4. The screen tears open as a diagonal shutter.
-    .to(panelL, { xPercent: -32, yPercent: -125, rotate: -7, duration: 0.85, ease: 'power4.inOut' }, '<0.2')
-    .to(panelR, { xPercent: 32, yPercent: 125, rotate: -7, duration: 0.85, ease: 'power4.inOut' }, '<')
-
-    // Reveal the hero just before the panels finish clearing.
-    .add(reveal, '-=0.5');
+    // Reveal the hero mid-sweep so there's zero dead air.
+    .add(reveal, '-=0.42');
 }
 
 /** Strong entrance: the name reveals char-by-char, everything else cascades in. */
@@ -117,10 +107,15 @@ function heroIntro() {
 
   tl.fromTo('[data-anim-hero="desc"]',
       { y: 18, autoAlpha: 0 },
-      { y: 0, autoAlpha: 1, duration: 0.7 }, '-=0.5')
-    .fromTo('[data-anim-hero="avatar"]',
+      { y: 0, autoAlpha: 1, duration: 0.7 }, '-=0.5');
+
+  // Avatar is optional (currently hidden until the photo is ready).
+  const avatar = document.querySelector<HTMLElement>('[data-anim-hero="avatar"]');
+  if (avatar) {
+    tl.fromTo(avatar,
       { scale: 0.86, autoAlpha: 0, rotate: -3 },
       { scale: 1, autoAlpha: 1, rotate: 0, duration: 1 }, '-=0.9');
+  }
 }
 
 /** Subtle: hero content drifts and fades as you scroll past it. */
@@ -215,53 +210,6 @@ function heroNameHover() {
   });
 }
 
-/** Magnetic pull: tagged controls lean toward the cursor and ease back on leave. */
-function magnetics() {
-  if (!finePointer) return;
-  document.querySelectorAll<HTMLElement>('[data-magnetic]').forEach((el) => {
-    const strength = parseFloat(el.dataset.magnetic || '') || 0.35;
-    const xTo = gsap.quickTo(el, 'x', { duration: 0.4, ease: 'power3.out' });
-    const yTo = gsap.quickTo(el, 'y', { duration: 0.4, ease: 'power3.out' });
-    el.addEventListener('mousemove', (e) => {
-      const r = el.getBoundingClientRect();
-      xTo((e.clientX - (r.left + r.width / 2)) * strength);
-      yTo((e.clientY - (r.top + r.height / 2)) * strength);
-    });
-    el.addEventListener('mouseleave', () => { xTo(0); yTo(0); });
-  });
-}
-
-/**
- * Scroll-velocity skew: cards shear a few degrees in the direction of fast
- * scrolling and settle back with an ease — the page feels like it has inertia.
- */
-function scrollSkew() {
-  const targets = gsap.utils.toArray<HTMLElement>('[data-project-card], .exp-card');
-  if (!targets.length) return;
-  gsap.set(targets, { transformOrigin: '50% 50%' });
-
-  const proxy = { skew: 0 };
-  const setter = gsap.quickSetter(targets, 'skewY', 'deg');
-  const clamp = gsap.utils.clamp(-3, 3);
-
-  ScrollTrigger.create({
-    onUpdate(self) {
-      const skew = clamp(self.getVelocity() / -450);
-      // Only re-kick the settle tween when the new impulse is stronger.
-      if (Math.abs(skew) > Math.abs(proxy.skew)) {
-        proxy.skew = skew;
-        gsap.to(proxy, {
-          skew: 0,
-          duration: 0.7,
-          ease: 'power3',
-          overwrite: true,
-          onUpdate: () => setter(proxy.skew),
-        });
-      }
-    },
-  });
-}
-
 /**
  * Scrambles a mission code (e.g. "MSN-03") through random glyphs before
  * settling on the real value — a tiny "decrypting telemetry" beat.
@@ -284,9 +232,7 @@ function scrambleCode(el: HTMLElement, final: string, frames = 14) {
  *    and snap into focus with a stagger.
  * 3. As each card lands, its constellation draws itself stroke-by-stroke and
  *    its mission code scrambles into place.
- * 4. After landing, every card floats in zero-g (slow yoyo drift, each with
- *    its own period so the grid never moves in lockstep).
- * 5. Hover: 3D tilt + a glow that tracks the cursor via CSS vars.
+ * 4. Hover: 3D tilt + a glow that tracks the cursor via CSS vars.
  */
 function projects() {
   const cards = gsap.utils.toArray<HTMLElement>('[data-project-card]');
@@ -338,18 +284,8 @@ function projects() {
     stagger: 0.1,
     scrollTrigger: { trigger: '#projects', start: 'top 72%' },
     onComplete: () => {
-      // Drop the blur rasterization cost and start the zero-g drift.
+      // Drop the blur rasterization cost once the cards have landed.
       gsap.set(cards, { clearProps: 'filter' });
-      cards.forEach((card, i) => {
-        gsap.to(card, {
-          y: '+=7',
-          duration: 2.4 + (i % 3) * 0.5,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut',
-          delay: i * 0.25,
-        });
-      });
     },
   });
 
@@ -378,7 +314,7 @@ function projects() {
     });
   });
 
-  // 5. Desktop hover: 3D tilt + cursor-tracking glow
+  // 4. Desktop hover: 3D tilt + cursor-tracking glow
   if (finePointer) {
     cards.forEach((card) => {
       tilt(card);
@@ -393,61 +329,23 @@ function projects() {
   }
 }
 
-/** About section: label → title word reveal → paragraphs stagger → skills stagger. */
+/** About section: the whole block rises and fades in as one unit. */
 function aboutReveal() {
-  if (!document.querySelector('[data-anim-about]')) return;
-
-  const tl = gsap.timeline({
-    scrollTrigger: { trigger: '#about', start: 'top 70%', once: true },
-    defaults: { ease: 'power3.out' },
-  });
-
-  tl.fromTo('[data-anim-about="label"]',
-    { y: 20, autoAlpha: 0 },
-    { y: 0, autoAlpha: 1, duration: 0.55 });
-
-  const titleEl = document.querySelector<HTMLElement>('[data-anim-about="title"]');
-  if (titleEl) {
-    gsap.set(titleEl, { autoAlpha: 1 });
-    const split = new SplitText(titleEl, { type: 'words' });
-    tl.fromTo(split.words,
-      { yPercent: 110, autoAlpha: 0, rotateX: -60, transformOrigin: '50% 100%' },
-      {
-        yPercent: 0, autoAlpha: 1, rotateX: 0,
-        stagger: 0.08, duration: 0.65, ease: 'back.out(1.4)',
-        onComplete: () => split.revert(),
-      }, '-=0.25');
-  }
-
-  tl.fromTo('[data-anim-about="skill-group"]',
-    { x: 30, autoAlpha: 0 },
-    { x: 0, autoAlpha: 1, duration: 0.5, stagger: 0.12 },
-    '-=0.3');
-}
-
-/**
- * About paragraphs read like a scrubbed transmission: every word starts faint
- * and brightens to full as it crosses the viewport, tied 1:1 to the scroll.
- */
-function aboutScrubWords() {
-  gsap.utils.toArray<HTMLElement>('[data-anim-about="para"]').forEach((p) => {
-    const split = new SplitText(p, { type: 'words' });
-    gsap.set(p, { autoAlpha: 1 });
-    gsap.fromTo(split.words,
-      { opacity: 0.12 },
-      {
-        opacity: 1,
-        stagger: 0.08,
-        ease: 'none',
-        scrollTrigger: { trigger: p, start: 'top 85%', end: 'top 40%', scrub: 0.5 },
-      });
-  });
+  const section = document.querySelector<HTMLElement>('#about');
+  if (!section) return;
+  gsap.fromTo(section,
+    { y: 36, autoAlpha: 0 },
+    {
+      y: 0, autoAlpha: 1, duration: 0.9, ease: 'power3.out',
+      scrollTrigger: { trigger: section, start: 'top 75%', once: true },
+    });
 }
 
 /** Subtle: contact links slide in one after another. */
 function contactReveal() {
-  if (!document.querySelector('[data-anim-contact]')) return;
-  gsap.from('[data-anim-contact] > a', {
+  const links = gsap.utils.toArray<HTMLElement>('[data-anim-contact] a');
+  if (!links.length) return;
+  gsap.from(links, {
     x: -20,
     autoAlpha: 0,
     duration: 0.6,
@@ -595,7 +493,7 @@ function experienceReveal() {
 
 function init() {
   const fallback = () => {
-    gsap.set('[data-anim-hero],[data-anim-about],[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
+    gsap.set('[data-anim-hero],#about,[data-exp-company],[data-exp-role],[data-exp-num],[data-proj-title]',
       { clearProps: 'all' });
     gsap.set('.exp-card', { clearProps: 'clip-path' });
   };
@@ -622,13 +520,10 @@ function init() {
         const avatar = document.querySelector<HTMLElement>('[data-hero-avatar]');
         if (avatar && finePointer) tilt(avatar);
         aboutReveal();
-        aboutScrubWords();
         experienceReveal();
         projects();
         contactReveal();
         sectionHeads();
-        scrollSkew();
-        magnetics();
         ScrollTrigger.refresh();
         if (document.fonts) document.fonts.ready.then(() => ScrollTrigger.refresh());
       } catch (err) {
