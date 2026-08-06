@@ -211,7 +211,7 @@ function heroNameHover() {
 }
 
 /**
- * Hero photo card: cycles GitHub avatar → profile photo → studio photo with
+ * Hero photo card: cycles GitHub avatar → studio photo with
  * a single clean coin flip. The whole card — frame, corners, tag, hint —
  * rides one rigid plane (`.hero-photo-spin`) that lifts, turns exactly one
  * full turn, and drops back down with a soft landing bounce; the photo
@@ -228,10 +228,9 @@ function heroPhotoSwap() {
   const spin = card.querySelector<HTMLElement>('[data-hero-spin]');
   const layers = [
     card.querySelector<HTMLElement>('.hero-photo-img--avatar'),
-    card.querySelector<HTMLElement>('.hero-photo-img--profile'),
     card.querySelector<HTMLElement>('.hero-photo-img--studio'),
   ];
-  const labels = ['avatar', 'profile', 'studio'];
+  const labels = ['avatar', 'studio'];
   const tag = card.querySelector<HTMLElement>('[data-hero-photo-tag]');
   const frame = card.querySelector<HTMLElement>('.hero-photo-frame');
   if (!spin || layers.some((l) => !l) || !tag || !frame) return;
@@ -343,6 +342,30 @@ function projects() {
   const countTrack = deck.querySelector<HTMLElement>('[data-proj-count]');
   const n = slides.length;
 
+  // ── Jump-to-project dots ──────────────────────────────────────────────
+  // `deckTl` always points at whichever pinned timeline is currently live
+  // (desktop/mobile rebuild it on breakpoint change via matchMedia below),
+  // so a dot click can compute a scroll target against it at click time.
+  const dots = gsap.utils.toArray<HTMLButtonElement>('[data-proj-dot]');
+  let deckTl: gsap.core.Timeline | null = null;
+
+  function setActiveDot(i: number) {
+    dots.forEach((d, di) => d.setAttribute('aria-current', String(di === i)));
+  }
+
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      if (!deckTl) return;
+      const st = deckTl.scrollTrigger;
+      if (!st) return;
+      // swap{i-1} is the instant slide i becomes active; +0.85 time-units
+      // lands past its ~0.6s enter animation, inside its steady dwell.
+      const t = i === 0 ? 0 : Number(deckTl.labels[`swap${i - 1}`]) + 0.85;
+      const frac = Math.min(1, Math.max(0, t / deckTl.duration()));
+      window.scrollTo({ top: st.start + frac * (st.end - st.start), behavior: 'smooth' });
+    });
+  });
+
   // Identity target shared by every entrance — resets whatever axes the
   // preset displaced.
   const settled = { x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0, autoAlpha: 1 };
@@ -397,6 +420,18 @@ function projects() {
         // frame. Finishing the scrub instantly past a fast scroll avoids it.
         fastScrollEnd: true,
       },
+    });
+
+    deckTl = tl;
+    setActiveDot(0);
+    tl.eventCallback('onUpdate', () => {
+      const t = tl.time();
+      let idx = 0;
+      for (let k = 0; k < n - 1; k++) {
+        const lbl = tl.labels[`swap${k}`];
+        if (typeof lbl === 'number' && t >= lbl) idx = k + 1;
+      }
+      setActiveDot(idx);
     });
 
     for (let i = 0; i < n - 1; i++) {

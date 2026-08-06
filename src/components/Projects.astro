@@ -8,6 +8,38 @@
  */
 const projects = [
   {
+    title: 'Fut11 Fantasy',
+    logo: '/projects/fut11-fav.svg',
+    shot: '/projects/fut11.webp',
+    descEs:
+      'Fantasy sobre la Liga BetPlay: armás tu XI titular por jornada, cada jugador puntúa según su rating real de partido (estilo SofaScore), y competís en ligas privadas con mercado de compra/venta, pujas y ofertas directas entre managers.',
+    descEn:
+      'Fantasy league for the BetPlay League: build your starting XI each matchday, players score from real match ratings (SofaScore-style), and compete in private leagues with a buy/sell market, bidding and direct offers between managers.',
+    tags: ['React', 'Supabase', 'Tailwind 4', 'Vite'],
+    repo: null,
+    demo: 'https://fut11-fantasy.vercel.app/',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#4ade80',
+  },
+  {
+    title: 'Mind Roulette',
+    logo: '/projects/mindroulette-fav.svg',
+    shot: '/projects/mindroulette.webp',
+    descEs:
+      'Web app de estudio activo: elegís un nivel de dificultad, la app sortea al azar un concepto de un mazo de +200, y te guía con dos timers — investigar el tema y explicarlo en voz alta (técnica Feynman). Disponible en español, inglés, francés y portugués.',
+    descEn:
+      'Active-recall study web app: pick a difficulty level, the app draws a random concept from a deck of 200+, and guides you through two timers — researching the topic and explaining it out loud (Feynman technique). Available in Spanish, English, French and Portuguese.',
+    tags: ['Astro', 'TypeScript', 'Tailwind', 'GSAP'],
+    repo: 'https://github.com/frankalessandro/mindroulette',
+    demo: 'https://mindroulette.vercel.app/',
+    statusEs: 'EN PRODUCCIÓN',
+    statusEn: 'IN PRODUCTION',
+    live: true,
+    accent: '#c2a878',
+  },
+  {
     title: 'Forge',
     logo: '/projects/forge-fav.svg',
     shot: '/projects/forge.webp',
@@ -40,22 +72,6 @@ const projects = [
     accent: '#a78bfa',
   },
   {
-    title: 'Spa Salud y Vida',
-    logo: '/projects/spa-fav.svg',
-    shot: '/projects/spa.webp',
-    descEs:
-      'Sitio web para un spa y centro de bienestar: presentación de servicios y captación de clientes, construido estático con Astro y desplegado en Vercel.',
-    descEn:
-      'Website for a spa & wellness center: service showcase and client acquisition, statically built with Astro and deployed on Vercel.',
-    tags: ['Astro', 'TypeScript', 'CSS', 'GSAP'],
-    repo: 'https://github.com/frankalessandro/spasaludyvida',
-    demo: 'https://spasaludyvida.vercel.app',
-    statusEs: 'EN PRODUCCIÓN',
-    statusEn: 'IN PRODUCTION',
-    live: true,
-    accent: '#22d3ee',
-  },
-  {
     title: 'Polla Mundialista 2026',
     logo: '/projects/polla-fav.png',
     shot: '/projects/polla.webp',
@@ -70,22 +86,6 @@ const projects = [
     statusEn: 'COMPLETED',
     live: false,
     accent: '#fbbf24',
-  },
-  {
-    title: 'ClarBank',
-    logo: '/projects/clarbank-fav.svg',
-    shot: '/projects/clarbank.webp',
-    descEs:
-      'Simulador bancario full-stack: roles (director, asesor, cajero, cliente), apertura de cuentas con formularios multi-paso, autorización de solicitudes y módulo de caja. API documentada con Swagger. Clasificó a nivel departamental y nacional en el XIII Encuentro de Semilleros de Investigación.',
-    descEn:
-      'Full-stack banking simulator: roles (director, advisor, teller, client), multi-step account opening, request authorization flows and a cash desk module. Swagger-documented API. Qualified at regional and national level in the XIII Research Incubator Meetup.',
-    tags: ['React', 'Node.js', 'PostgreSQL', 'Swagger'],
-    repo: 'https://github.com/frankalessandro/Simulador_Banca',
-    demo: 'https://clarbank.vercel.app/',
-    statusEs: 'FINALIZADO',
-    statusEn: 'COMPLETED',
-    live: false,
-    accent: '#38bdf8',
   },
   {
     title: 'VotApp',
@@ -152,22 +152,36 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
 
 <section id="projects" class="relative px-4 sm:px-6 py-28 md:py-40 max-w-6xl mx-auto">
   <p data-i18n="projects.label" data-anim-head class="relative text-accent font-mono text-xs tracking-widest uppercase mb-3">Proyectos</p>
-  <h2 data-i18n="projects.title" data-proj-title class="relative text-3xl font-black text-text tracking-tight">Trabajo seleccionado</h2>
+  <h2 data-i18n="projects.title" data-proj-title class="relative text-3xl font-extrabold text-text tracking-tight">Trabajo seleccionado</h2>
   <p data-i18n="projects.sub" data-anim-head class="relative text-muted text-sm mt-3 mb-14 font-mono">
     Proyectos personales, diseñados y construidos de principio a fin.
   </p>
 
   <div class="proj-deck relative" data-proj-deck>
-    <!-- rolling index: 01 → 06 -->
-    <div class="proj-counter absolute -top-9 right-0 hidden lg:flex items-baseline gap-1.5 font-mono text-xs tracking-widest text-muted" aria-hidden="true">
-      <span class="proj-counter-viewport">
-        <span class="proj-counter-track" data-proj-count>
-          {projects.map((_, i) => (
-            <span class="proj-counter-item text-text">{String(i + 1).padStart(2, '0')}</span>
-          ))}
+    <!-- rolling index: 01 → 06, plus jump-to-project dots -->
+    <div class="proj-counter absolute -top-9 right-0 hidden lg:flex items-center gap-4">
+      <div class="proj-dots flex items-center gap-2.5" data-proj-dots role="tablist" aria-label="Ir a un proyecto">
+        {projects.map((p, i) => (
+          <button
+            type="button"
+            class="proj-dot"
+            data-proj-dot={i}
+            role="tab"
+            aria-current={i === 0 ? 'true' : 'false'}
+            aria-label={`${p.title}`}
+          ></button>
+        ))}
+      </div>
+      <div class="flex items-baseline gap-1.5 font-mono text-xs tracking-widest text-muted" aria-hidden="true">
+        <span class="proj-counter-viewport">
+          <span class="proj-counter-track" data-proj-count>
+            {projects.map((_, i) => (
+              <span class="proj-counter-item text-text">{String(i + 1).padStart(2, '0')}</span>
+            ))}
+          </span>
         </span>
-      </span>
-      <span class="opacity-60">/ {total}</span>
+        <span class="opacity-60">/ {total}</span>
+      </div>
     </div>
 
     <div class="proj-stage relative flex flex-col gap-20 lg:gap-0" data-proj-stage>
@@ -195,7 +209,7 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
               </span>
             </div>
 
-            <h3 data-proj-el class="proj-title relative text-text font-black text-3xl sm:text-4xl tracking-tight mb-6">
+            <h3 data-proj-el class="proj-title relative text-text font-extrabold text-3xl sm:text-4xl tracking-tight mb-6">
               {p.title}
             </h3>
 
@@ -214,15 +228,17 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
             </ul>
 
             <div data-proj-el class="relative flex gap-3 font-mono text-xs">
-              <a
-                href={p.repo}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn-reticle px-4 py-2 border border-border rounded text-text hover:border-accent/40 transition-colors"
-                aria-label={`Código de ${p.title} en GitHub`}
-              >
-                <span data-lang="es">Código</span><span data-lang="en">Source</span>
-              </a>
+              {p.repo && (
+                <a
+                  href={p.repo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn-reticle px-4 py-2 border border-border rounded text-text hover:border-accent/40 transition-colors"
+                  aria-label={`Código de ${p.title} en GitHub`}
+                >
+                  <span data-lang="es">Código</span><span data-lang="en">Source</span>
+                </a>
+              )}
               {p.demo && (
                 <a
                   href={p.demo}
@@ -299,6 +315,30 @@ const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?
     html.js-anim .proj-stage {
       height: min(72vh, 620px);
     }
+  }
+
+  /* ── Jump-to-project dots ─────────────────────────────────────────────── */
+  .proj-dot {
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border-radius: 9999px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease;
+  }
+  .proj-dot:hover {
+    border-color: color-mix(in srgb, var(--color-accent) 60%, transparent);
+  }
+  .proj-dot[aria-current='true'] {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: scale(1.4);
+    box-shadow: 0 0 8px rgba(110, 231, 183, 0.6);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .proj-dots { display: none; }
   }
 
   /* ── Rolling counter ──────────────────────────────────────────────────── */

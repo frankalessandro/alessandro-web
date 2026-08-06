@@ -1,7 +1,6 @@
 ---
 import { Image } from "astro:assets";
 import avatarImg from "../assets/Avatar.webp";
-import profileImg from "../assets/Perfil foto.webp";
 import studioImg from "../assets/StudioPhoto.webp";
 
 const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
@@ -35,7 +34,7 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
         id="hero-name"
         data-anim-hero="name"
         data-particle-hover
-        class="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight text-text leading-tight mb-4"
+        class="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-text leading-tight mb-4"
       >
         Frank
         <span class="text-accent">Roldan</span>
@@ -46,6 +45,24 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
         aplicaciones web escalables. Especializado en React, Node.js y APIs
         REST.
       </p>
+
+      <!-- Primary actions -->
+      <div data-anim-hero="desc" class="flex items-center gap-3 mb-6">
+        <a
+          href="#projects"
+          data-i18n="hero.cta.projects"
+          class="btn-reticle text-sm font-medium px-5 py-2.5 rounded-lg border border-accent/40 bg-accent/5 text-accent hover:bg-accent/10 transition-colors duration-200"
+        >
+          Ver proyectos
+        </a>
+        <a
+          href="#contact"
+          data-i18n="hero.cta.contact"
+          class="btn-reticle text-sm font-medium px-5 py-2.5 rounded-lg border border-border text-text hover:border-accent/40 transition-colors duration-200"
+        >
+          Contacto
+        </a>
+      </div>
 
       <!-- Social links -->
       <div data-anim-hero="desc" class="flex items-center gap-3">
@@ -95,7 +112,7 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
         role="button"
         tabindex="0"
         aria-pressed="false"
-        aria-label="Alternar entre avatar de GitHub, foto de perfil y foto de estudio"
+        aria-label="Alternar entre avatar de GitHub y foto de estudio"
         class="hero-photo w-52 h-52 sm:w-64 sm:h-64 md:w-72 md:h-72 cursor-pointer"
       >
         <div data-hero-spin class="hero-photo-spin">
@@ -110,16 +127,6 @@ const roles = ["Full Stack Developer", "Frontend Developer", "React & Node.js"];
               format="webp"
               quality={95}
               class="hero-photo-img hero-photo-img--avatar"
-            />
-            <Image
-              src={profileImg}
-              alt="Foto de perfil de Frank Roldan"
-              width={288}
-              height={288}
-              densities={[1, 2]}
-              format="webp"
-              quality={95}
-              class="hero-photo-img hero-photo-img--profile"
             />
             <Image
               src={studioImg}
