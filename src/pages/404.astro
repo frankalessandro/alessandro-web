@@ -1,0 +1,37 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Logo from '../components/Logo.astro';
+---
+
+<Layout
+  title="404 | Frank Roldan"
+  description="Página no encontrada."
+>
+  <main class="relative z-10 min-h-screen flex items-center justify-center px-6">
+    <div class="text-center max-w-md">
+      <Logo class="w-16 h-16 mx-auto mb-8 text-accent" />
+
+      <p class="font-mono text-accent text-xs tracking-widest uppercase mb-4">
+        <span data-lang="es">Error 404</span><span data-lang="en">404 error</span>
+      </p>
+
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-text tracking-tight mb-4">
+        <span data-lang="es">Esta página no existe</span>
+        <span data-lang="en">This page doesn't exist</span>
+      </h1>
+
+      <p class="text-muted text-sm leading-relaxed mb-8">
+        <span data-lang="es">El enlace puede estar roto o la página se movió de lugar.</span>
+        <span data-lang="en">The link may be broken or the page has moved.</span>
+      </p>
+
+      <a
+        href="/"
+        class="btn-reticle inline-flex items-center gap-2 text-sm font-medium px-5 py-2.5 rounded-lg border border-accent/40 bg-accent/5 text-accent hover:bg-accent/10 transition-colors duration-200"
+      >
+        <span data-lang="es">Volver al inicio</span>
+        <span data-lang="en">Back to home</span>
+      </a>
+    </div>
+  </main>
+</Layout>

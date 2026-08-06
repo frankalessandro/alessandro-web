@@ -1,5 +1,48 @@
 ---
-const jobs = [
+interface Job {
+  company: string;
+  role: string;
+  roleEn: string;
+  period: string;
+  current?: boolean;
+  labelsEs?: [string, string, string];
+  labelsEn?: [string, string, string];
+  problem: string;
+  problemEn: string;
+  solution: string;
+  solutionEn: string;
+  results: string[];
+  resultsEn: string[];
+}
+
+const jobs: Job[] = [
+  {
+    company: 'Freelance',
+    role: 'Desarrollador Full Stack Independiente',
+    roleEn: 'Independent Full Stack Developer',
+    period: 'Ene 2026 – presente',
+    current: true,
+    labelsEs: ['Problema', 'Desarrollo', 'Solución'],
+    labelsEn: ['Problem', 'Development', 'Solution'],
+    problem:
+      'Pequeños negocios y profesionales independientes necesitaban presencia web profesional y visibilidad en buscadores, pero sin equipo interno ni presupuesto para coordinar diseño, desarrollo y SEO por separado entre distintas agencias.',
+    problemEn:
+      'Small businesses and independent professionals needed a professional web presence and search visibility, but had no in-house team or budget to coordinate design, development and SEO across separate agencies.',
+    solution:
+      'Diseñé y desarrollé sitios web y landing pages con Astro, Tailwind CSS y prácticas de SEO técnico para 8 clientes, gestionando cada proyecto de extremo a extremo — arquitectura, desarrollo, optimización de performance y entrega — además de identidad visual y documentación comercial (cotizaciones, propuestas) para clientes de distintos sectores.',
+    solutionEn:
+      'I designed and built websites and landing pages with Astro, Tailwind CSS and technical SEO practices for 8 clients, managing each project end to end — architecture, development, performance optimization and delivery — plus visual identity and commercial documentation (quotes, proposals) for clients across different sectors.',
+    results: [
+      '8 proyectos entregados de extremo a extremo, desde la arquitectura hasta el despliegue en producción.',
+      'Identidad de marca y documentación comercial alineadas con el desarrollo técnico en cada entrega.',
+      'Infraestructura de posicionamiento orgánico (Google Business Profile, GA4, Search Console) configurada para cada cliente.',
+    ],
+    resultsEn: [
+      '8 projects delivered end to end, from architecture to production deployment.',
+      'Brand identity and commercial documentation aligned with technical development on every delivery.',
+      'Organic search infrastructure (Google Business Profile, GA4, Search Console) configured for each client.',
+    ],
+  },
   {
     company: 'Valle Avanza',
     role: 'Desarrollador Frontend',
@@ -98,16 +141,16 @@ const jobs = [
   },
 ];
 
-const panels = (job: (typeof jobs)[number]) => [
-  { icon: '⚠', labelEs: 'Problema', labelEn: 'Problem',   color: 'text-amber-400', dot: 'bg-amber-400', glow: 'rgba(251,191,36,0.5)',   contentEs: job.problem,  contentEn: job.problemEn,  list: false },
-  { icon: '◈', labelEs: 'Solución', labelEn: 'Solution',  color: 'text-accent',    dot: 'bg-accent',    glow: 'rgba(110,231,183,0.5)',  contentEs: job.solution, contentEn: job.solutionEn, list: false },
-  { icon: '↗', labelEs: 'Resultados', labelEn: 'Results', color: 'text-sky-400',   dot: 'bg-sky-400',   glow: 'rgba(56,189,248,0.5)',   contentEs: job.results,  contentEn: job.resultsEn,  list: true  },
+const panels = (job: Job) => [
+  { icon: '⚠', labelEs: job.labelsEs?.[0] ?? 'Problema',   labelEn: job.labelsEn?.[0] ?? 'Problem',   color: 'text-amber-400', dot: 'bg-amber-400', glow: 'rgba(251,191,36,0.5)',  contentEs: job.problem,  contentEn: job.problemEn,  list: false },
+  { icon: '◈', labelEs: job.labelsEs?.[1] ?? 'Solución',   labelEn: job.labelsEn?.[1] ?? 'Solution',  color: 'text-accent',    dot: 'bg-accent',    glow: 'rgba(110,231,183,0.5)', contentEs: job.solution, contentEn: job.solutionEn, list: false },
+  { icon: '↗', labelEs: job.labelsEs?.[2] ?? 'Resultados', labelEn: job.labelsEn?.[2] ?? 'Results',   color: 'text-sky-400',   dot: 'bg-sky-400',   glow: 'rgba(56,189,248,0.5)',  contentEs: job.results,  contentEn: job.resultsEn,  list: true  },
 ];
 ---
 
 <section id="experience" class="px-4 sm:px-6 py-28 md:py-40 max-w-5xl mx-auto">
   <p data-i18n="exp.label" data-anim-head class="text-accent font-mono text-xs tracking-widest uppercase mb-3">Experiencia</p>
-  <h2 data-i18n="exp.title" data-exp-title class="text-3xl font-black text-text mb-12 tracking-tight">Dónde he trabajado</h2>
+  <h2 data-i18n="exp.title" data-exp-title class="text-3xl font-extrabold text-text mb-12 tracking-tight">Dónde he trabajado</h2>
 
   <div class="flex flex-col items-center gap-12 md:gap-16">
     {jobs.map((job, ji) => (
@@ -121,7 +164,7 @@ const panels = (job: (typeof jobs)[number]) => [
       <div class="exp-scan-line" aria-hidden="true"></div>
 
       <article
-        class="exp-card group relative w-full rounded-2xl border border-border bg-bg-2 overflow-hidden"
+        class={`exp-card group relative w-full rounded-2xl border overflow-hidden bg-bg-2 ${job.current ? 'border-accent/30 bg-linear-to-b from-accent/[0.05] to-transparent' : 'border-border'}`}
       >
         <!-- accent line that grows on hover -->
         <span class="pointer-events-none absolute left-0 top-0 h-full w-px bg-linear-to-b from-transparent via-accent/60 to-transparent scale-y-0 group-hover:scale-y-100 origin-center transition-transform duration-500 ease-out"></span>
@@ -129,13 +172,27 @@ const panels = (job: (typeof jobs)[number]) => [
         <!-- Header -->
         <div class="px-4 sm:px-6 py-4 sm:py-5 border-b border-border" data-exp-header>
           <div class="flex items-start justify-between gap-4">
-            <div>
-              <h3 class="text-text font-semibold text-base tracking-tight" data-exp-company>{job.company}</h3>
-              <p class="text-muted text-xs font-mono mt-1" data-exp-role>
-                <span data-lang="es">{job.role}</span>
-                <span data-lang="en">{job.roleEn}</span>
-                {' · '}{job.period}
-              </p>
+            <div class="flex items-start gap-3">
+              <span class={`icon-ping shrink-0 w-9 h-9 rounded-lg border flex items-center justify-center font-mono text-sm ${job.current ? 'border-accent/40 bg-accent/10 text-accent' : 'border-border bg-bg-3 text-muted'}`}>
+                {job.company.charAt(0)}
+              </span>
+              <div>
+                <h3 class="text-text font-semibold text-base tracking-tight" data-exp-company>{job.company}</h3>
+                <p class="text-muted text-xs font-mono mt-1 flex flex-wrap items-center gap-x-2 gap-y-1" data-exp-role>
+                  <span>
+                    <span data-lang="es">{job.role}</span>
+                    <span data-lang="en">{job.roleEn}</span>
+                    {' · '}{job.period}
+                  </span>
+                  {job.current && (
+                    <span class="inline-flex items-center gap-1.5 text-accent">
+                      <span class="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+                      <span data-lang="es">En curso</span>
+                      <span data-lang="en">Ongoing</span>
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
             <span data-exp-num class="shrink-0 text-[10px] font-mono text-muted/60 border border-border rounded-md px-2 py-1 group-hover:border-accent/30 group-hover:text-accent/70 transition-colors duration-500">
               0{ji + 1}
@@ -170,7 +227,7 @@ const panels = (job: (typeof jobs)[number]) => [
               </button>
 
               <!-- grid-rows trick for smooth height -->
-              <div class="acc-panel grid grid-rows-[0fr] transition-[grid-template-rows] duration-450 ease-in-out">
+              <div class="acc-panel grid grid-rows-[0fr] transition-[grid-template-rows] duration-500 ease-in-out">
                 <div class="overflow-hidden">
                   <div class="px-4 sm:px-6 pb-5 pt-1">
                     {item.list ? (
