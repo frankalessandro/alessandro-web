@@ -1,0 +1,31 @@
+---
+/**
+ * Infinite horizontal ticker strip. Content is duplicated twice in the
+ * markup so brutal-animations.ts can loop xPercent 0 -> -50 seamlessly.
+ * `reverse` scrolls the other direction (used to break the visual rhythm
+ * between consecutive marquees on the page).
+ */
+interface Props {
+  text: string;
+  variant?: 'paper' | 'signal' | 'acid';
+  reverse?: boolean;
+}
+
+const { text, variant = 'paper', reverse = false } = Astro.props;
+
+const bg =
+  variant === 'signal' ? 'bg-signal text-paper'
+  : variant === 'acid' ? 'bg-acid text-ink'
+  : 'bg-paper text-ink';
+---
+
+<div class:list={['brutal-marquee', bg]}>
+  <div
+    class="brutal-marquee-track"
+    data-brutal-marquee-track={reverse ? 'reverse' : 'forward'}
+  >
+    {Array.from({ length: 12 }).map(() => (
+      <span class="brutal-marquee-item">{text}</span>
+    ))}
+  </div>
+</div>

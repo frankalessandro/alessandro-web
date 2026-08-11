@@ -1,0 +1,53 @@
+---
+---
+
+<section id="about" class="px-4 sm:px-6 py-14 sm:py-20 md:py-28 max-w-6xl mx-auto">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16 items-start">
+    <div data-brutal-reveal="left">
+      <p data-i18n="about.label" data-brutal-title class="font-mono text-xs tracking-widest uppercase mb-3 text-signal font-bold">
+        Sobre mí
+      </p>
+      <h2
+        data-i18n="about.title"
+        data-brutal-title
+        class="uppercase leading-[0.85] mb-6 text-[clamp(2.2rem,6vw,3.6rem)]"
+        style="font-family: var(--font-display);"
+      >
+        Un poco de mi historia
+      </h2>
+      <div class="space-y-4 text-sm leading-relaxed border-l-4" style="border-left: 4px solid var(--color-ink); padding-left: 1rem;">
+        <p data-lang="es">
+          Soy Frank Alessandro Roldan, desarrollador Full Stack de Colombia con más de 3 años de experiencia construyendo aplicaciones web escalables. Trabajo con React, Node.js, PHP y PostgreSQL, con foco en APIs REST, rendimiento e interfaces accesibles.
+        </p>
+        <p data-lang="en">
+          I'm Frank Alessandro Roldan, a Full Stack developer from Colombia with 3+ years of experience building scalable web apps. I work with React, Node.js, PHP and PostgreSQL, focused on REST APIs, performance and accessible interfaces.
+        </p>
+        <p data-lang="es">
+          He colaborado con equipos ágiles en proyectos reales que impactan cientos de usuarios, desde sistemas administrativos de gestión hasta plataformas de votación electrónica. Me apasiona el código limpio y el aprendizaje continuo.
+        </p>
+        <p data-lang="en">
+          I've collaborated with agile teams on real projects impacting hundreds of users, from administrative management systems to electronic voting platforms. I'm passionate about clean code and continuous learning.
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-6" data-brutal-reveal="right">
+      <p class="font-mono text-xs tracking-widest uppercase text-signal font-bold">Skills</p>
+
+      {[
+        { label: 'Frontend', items: ['React', 'Astro', 'JavaScript ES6+', 'TypeScript', 'Tailwind CSS', 'Redux', 'Vite'] },
+        { label: 'Backend', items: ['Node.js', 'Express.js', 'PHP (Yii2)', 'PostgreSQL', 'RESTful APIs', 'JWT'] },
+        { label: 'DevOps & Tools', items: ['Docker', 'Git / GitHub', 'CI/CD', 'Jest', 'Linux CLI', 'Jira'] },
+      ].map(({ label, items }) => (
+        <div>
+          <p class="text-xs font-bold uppercase mb-2 tracking-wide">{label}</p>
+          <div class="flex flex-wrap gap-2">
+            {items.map((i) => (
+              <span class="brutal-tag hover:bg-acid transition-colors duration-150">{i}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

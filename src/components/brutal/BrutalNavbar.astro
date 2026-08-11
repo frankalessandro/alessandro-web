@@ -1,0 +1,70 @@
+---
+import Logo from '../Logo.astro';
+import cvFile from '../../assets/FrankRoldan_2026.pdf';
+
+const links = [
+  { href: '#hero',       i18n: 'nav.home',       label: 'Inicio' },
+  { href: '#about',      i18n: 'nav.about',      label: 'Sobre mí' },
+  { href: '#experience', i18n: 'nav.experience', label: 'Experiencia' },
+  { href: '#projects',   i18n: 'nav.projects',   label: 'Proyectos' },
+  { href: '#contact',    i18n: 'nav.contact',    label: 'Contacto' },
+];
+---
+
+<header
+  id="brutal-navbar"
+  class="sticky top-0 z-50 bg-paper border-b-3 border-ink"
+  style="border-bottom-width: 3px;"
+>
+  <div class="max-w-6xl mx-auto flex items-center gap-3 px-4 sm:px-6 py-3">
+    <a
+      href="#hero"
+      aria-label="Inicio"
+      class="shrink-0 w-11 h-11 flex items-center justify-center bg-ink text-paper border-3 border-ink"
+      style="border-width: 3px;"
+    >
+      <Logo class="w-6 h-6" />
+    </a>
+
+    <nav
+      class="flex-1 flex items-center gap-1 overflow-x-auto"
+      aria-label="Secciones"
+    >
+      {links.map((l) => (
+        <a
+          href={l.href}
+          data-i18n={l.i18n}
+          class="shrink-0 font-mono text-xs uppercase tracking-widest px-3 py-2 border-3 border-transparent hover:border-ink hover:bg-acid transition-colors duration-150"
+          style="border-width: 3px;"
+        >
+          {l.label}
+        </a>
+      ))}
+    </nav>
+
+    <div class="shrink-0 flex items-center gap-2">
+      <a
+        href={cvFile}
+        download="FrankRoldan_2026.pdf"
+        class="stamp-btn stamp-btn--signal hidden sm:inline-flex px-3 py-2 text-xs"
+      >
+        CV ↓
+      </a>
+
+      <button
+        id="brutal-lang-toggle"
+        aria-label="Toggle language"
+        class="stamp-btn stamp-btn--compact px-2.5 py-2 text-xs"
+      >
+        EN
+      </button>
+
+      <a
+        href="/"
+        class="stamp-btn stamp-btn--ink px-3 py-2 text-xs whitespace-nowrap"
+      >
+        ◂ NORMAL
+      </a>
+    </div>
+  </div>
+</header>

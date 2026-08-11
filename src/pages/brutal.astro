@@ -1,0 +1,25 @@
+---
+import BrutalLayout from '../layouts/BrutalLayout.astro';
+import BrutalNavbar from '../components/brutal/BrutalNavbar.astro';
+import BrutalHero from '../components/brutal/BrutalHero.astro';
+import BrutalAbout from '../components/brutal/BrutalAbout.astro';
+import BrutalExperience from '../components/brutal/BrutalExperience.astro';
+import BrutalProjects from '../components/brutal/BrutalProjects.astro';
+import BrutalContact from '../components/brutal/BrutalContact.astro';
+import BrutalFooter from '../components/brutal/BrutalFooter.astro';
+---
+
+<BrutalLayout
+  title="Frank Roldan | Alter Ego — Brutalist Mode"
+  description="El mismo portfolio de Frank Alessandro Roldan, en clave brutalista: tipografía cruda, contraste duro, sin adornos."
+>
+  <BrutalNavbar />
+  <main>
+    <BrutalHero />
+    <BrutalAbout />
+    <BrutalExperience />
+    <BrutalProjects />
+    <BrutalContact />
+  </main>
+  <BrutalFooter />
+</BrutalLayout>

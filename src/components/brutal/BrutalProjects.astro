@@ -1,0 +1,118 @@
+---
+import { projects } from '../../data/content';
+import Marquee from './Marquee.astro';
+
+import astro from '../../assets/tech/astro.svg?raw';
+import typescript from '../../assets/tech/typescript.svg?raw';
+import javascript from '../../assets/tech/javascript.svg?raw';
+import tailwindcss from '../../assets/tech/tailwindcss.svg?raw';
+import react from '../../assets/tech/react.svg?raw';
+import supabase from '../../assets/tech/supabase.svg?raw';
+import zustand from '../../assets/tech/zustand.svg?raw';
+import nodedotjs from '../../assets/tech/nodedotjs.svg?raw';
+import postgresql from '../../assets/tech/postgresql.svg?raw';
+import swagger from '../../assets/tech/swagger.svg?raw';
+import css3 from '../../assets/tech/css3.svg?raw';
+import thesportsdb from '../../assets/tech/thesportsdb.svg?raw';
+import greensock from '../../assets/tech/greensock.svg?raw';
+
+const ICONS: Record<string, string> = {
+  astro, typescript, javascript, tailwindcss, react, supabase,
+  zustand, nodedotjs, postgresql, swagger, css3, thesportsdb, greensock,
+};
+const SLUG: Record<string, string> = {
+  'astro': 'astro', 'astro 6': 'astro',
+  'typescript': 'typescript',
+  'javascript': 'javascript',
+  'tailwind': 'tailwindcss', 'tailwind 4': 'tailwindcss', 'tailwind css': 'tailwindcss',
+  'react': 'react', 'react 19': 'react',
+  'supabase': 'supabase',
+  'zustand': 'zustand',
+  'node.js': 'nodedotjs', 'nodejs': 'nodedotjs',
+  'postgresql': 'postgresql',
+  'swagger': 'swagger',
+  'css': 'css3',
+  'thesportsdb': 'thesportsdb',
+  'gsap': 'greensock',
+};
+const iconFor = (tag: string): string | null => ICONS[SLUG[tag.toLowerCase()]] ?? null;
+---
+
+<section id="projects" class="py-14 sm:py-20 md:py-28">
+  <div class="px-4 sm:px-6 max-w-6xl mx-auto">
+    <p data-i18n="projects.label" data-brutal-title class="font-mono text-xs tracking-widest uppercase mb-3 text-signal font-bold">Proyectos</p>
+    <h2
+      data-i18n="projects.title"
+      data-brutal-title
+      class="uppercase leading-[0.85] text-[clamp(2.2rem,6vw,3.6rem)]"
+      style="font-family: var(--font-display);"
+    >
+      Trabajo seleccionado
+    </h2>
+    <p data-i18n="projects.sub" class="text-sm mt-3 mb-10 font-mono">
+      Proyectos personales, diseñados y construidos de principio a fin.
+    </p>
+  </div>
+
+  <div class="my-8">
+    <Marquee text="PROYECTOS ✦ SELECTED WORK ✦" variant="signal" />
+  </div>
+
+  <div class="px-4 sm:px-6 max-w-6xl mx-auto flex flex-col gap-12">
+    {projects.map((p, i) => (
+      <article
+        class="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] hard-card"
+        data-brutal-reveal={i % 2 === 0 ? 'left' : 'right'}
+        style={`--pc: ${p.accent};`}
+      >
+        <div class="halftone order-1" style="border-bottom: 3px solid var(--color-ink);">
+          <img src={p.shot} alt={`Captura de ${p.title}`} width="1440" height="900" loading="lazy" class="w-full h-56 lg:h-full object-cover object-top" />
+        </div>
+
+        <div class="order-2 p-5 sm:p-7 flex flex-col" style="border-top: 3px solid var(--color-ink);">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="text-[clamp(1.5rem,3vw,2.2rem)] leading-none" style="font-family: var(--font-display); color: var(--pc, var(--color-signal));">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <span class="flex items-center gap-2 font-mono text-[10px] tracking-widest uppercase">
+              <span class={`inline-block w-2 h-2 ${p.live ? 'bg-signal' : 'bg-ink'}`}></span>
+              <span data-lang="es">{p.statusEs}</span>
+              <span data-lang="en">{p.statusEn}</span>
+            </span>
+          </div>
+
+          <h3 class="uppercase text-2xl sm:text-3xl mb-3 leading-none" style="font-family: var(--font-display);">
+            {p.title}
+          </h3>
+
+          <p class="text-sm leading-relaxed mb-5 max-w-prose">
+            <span data-lang="es">{p.descEs}</span>
+            <span data-lang="en">{p.descEn}</span>
+          </p>
+
+          <ul class="flex flex-wrap gap-2 mb-6" role="list">
+            {p.tags.map((t) => (
+              <li class="brutal-tag" title={t}>
+                {iconFor(t) && <span class="w-3.5 h-3.5 inline-flex mr-1.5" set:html={iconFor(t)} />}
+                {t}
+              </li>
+            ))}
+          </ul>
+
+          <div class="mt-auto flex gap-3 font-mono text-xs">
+            {p.repo && (
+              <a href={p.repo} target="_blank" rel="noopener noreferrer" class="stamp-btn px-4 py-2">
+                <span data-lang="es">Código</span><span data-lang="en">Source</span>
+              </a>
+            )}
+            {p.demo && (
+              <a href={p.demo} target="_blank" rel="noopener noreferrer" class="stamp-btn stamp-btn--signal px-4 py-2">
+                <span data-lang="es">Ver sitio ↗</span><span data-lang="en">Visit site ↗</span>
+              </a>
+            )}
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>

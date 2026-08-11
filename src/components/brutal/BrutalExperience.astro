@@ -1,0 +1,131 @@
+---
+import { jobs, type Job } from '../../data/content';
+
+const panels = (job: Job) => [
+  { labelEs: job.labelsEs?.[0] ?? 'Problema',  labelEn: job.labelsEn?.[0] ?? 'Problem',  contentEs: job.problem,  contentEn: job.problemEn,  list: false },
+  { labelEs: job.labelsEs?.[1] ?? 'Solución',  labelEn: job.labelsEn?.[1] ?? 'Solution', contentEs: job.solution, contentEn: job.solutionEn, list: false },
+  { labelEs: job.labelsEs?.[2] ?? 'Resultados', labelEn: job.labelsEn?.[2] ?? 'Results',  contentEs: job.results,  contentEn: job.resultsEn,  list: true },
+];
+---
+
+<section id="experience" class="px-4 sm:px-6 py-14 sm:py-20 md:py-28 max-w-6xl mx-auto">
+  <p data-i18n="exp.label" data-brutal-title class="font-mono text-xs tracking-widest uppercase mb-3 text-signal font-bold">Experiencia</p>
+  <h2
+    data-i18n="exp.title"
+    data-brutal-title
+    class="uppercase leading-[0.85] mb-12 text-[clamp(2.2rem,6vw,3.6rem)]"
+    style="font-family: var(--font-display);"
+  >
+    Dónde he trabajado
+  </h2>
+
+  <div class="flex flex-col gap-8">
+    {jobs.map((job, ji) => (
+      <article
+        class="brutal-exp hard-card"
+        data-brutal-reveal={ji % 2 === 0 ? 'left' : 'right'}
+      >
+        <div class="flex items-stretch">
+          <div
+            class="hidden sm:flex items-center justify-center px-5 shrink-0"
+            style="border-right: 3px solid var(--color-ink);"
+          >
+            <span class="text-[clamp(2rem,4vw,3.2rem)] leading-none" style="font-family: var(--font-display);">
+              {String(ji + 1).padStart(2, '0')}
+            </span>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="px-4 sm:px-6 py-4" style="border-bottom: 3px solid var(--color-ink);">
+              <h3 class="font-bold text-lg uppercase tracking-tight">{job.company}</h3>
+              <p class="text-xs font-mono mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span>
+                  <span data-lang="es">{job.role}</span>
+                  <span data-lang="en">{job.roleEn}</span>
+                  {' · '}{job.period}
+                </span>
+                {job.current && (
+                  <span class="brutal-tag bg-acid !py-0.5">
+                    <span data-lang="es">En curso</span>
+                    <span data-lang="en">Ongoing</span>
+                  </span>
+                )}
+              </p>
+            </div>
+
+            <div class="divide-y" style="--tw-divide-opacity: 1; border-color: var(--color-ink);">
+              {panels(job).map((item, pi) => (
+                <div class="brutal-acc" style={pi > 0 ? 'border-top: 3px solid var(--color-ink);' : ''}>
+                  <button
+                    type="button"
+                    class="brutal-acc-trigger w-full flex items-center justify-between px-4 sm:px-6 py-3.5 cursor-pointer select-none text-left font-mono text-xs uppercase tracking-widest font-bold hover:bg-acid/40 transition-colors"
+                    aria-expanded="false"
+                  >
+                    <span>
+                      <span data-lang="es">{item.labelEs}</span>
+                      <span data-lang="en">{item.labelEn}</span>
+                    </span>
+                    <span class="brutal-acc-icon border-2 w-6 h-6 flex items-center justify-center text-xs" style="border: 2px solid var(--color-ink);">+</span>
+                  </button>
+                  <div class="brutal-acc-panel grid grid-rows-[0fr] transition-[grid-template-rows] duration-400 ease-in-out">
+                    <div class="overflow-hidden">
+                      <div class="px-4 sm:px-6 pb-5 pt-1 text-sm leading-relaxed">
+                        {item.list ? (
+                          <>
+                            <ul class="space-y-2" data-lang="es">
+                              {(item.contentEs as string[]).map((r) => (
+                                <li class="flex gap-2.5"><span class="font-bold">→</span><span>{r}</span></li>
+                              ))}
+                            </ul>
+                            <ul class="space-y-2" data-lang="en">
+                              {(item.contentEn as string[]).map((r) => (
+                                <li class="flex gap-2.5"><span class="font-bold">→</span><span>{r}</span></li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          <>
+                            <p data-lang="es">{item.contentEs as string}</p>
+                            <p data-lang="en">{item.contentEn as string}</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+</section>
+
+<style>
+  .brutal-acc.open .brutal-acc-panel { grid-template-rows: 1fr; }
+  .brutal-acc.open .brutal-acc-icon {
+    background: var(--color-signal);
+    color: var(--color-paper);
+    border-color: var(--color-signal) !important;
+    font-size: 0;
+  }
+  .brutal-acc.open .brutal-acc-icon::before {
+    content: '−';
+    font-size: 0.8rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brutal-acc-panel { transition: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('#experience .brutal-acc').forEach((acc) => {
+    const trigger = acc.querySelector<HTMLButtonElement>('.brutal-acc-trigger');
+    trigger?.addEventListener('click', () => {
+      const isOpen = acc.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', String(isOpen));
+    });
+  });
+</script>

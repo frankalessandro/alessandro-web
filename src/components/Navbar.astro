@@ -13,46 +13,58 @@ const links = [
 
 <header
   id="navbar"
-  class="fixed top-2 left-0 right-0 z-50 flex justify-center px-4"
+  class="fixed top-2 left-0 right-0 z-50 flex justify-center px-3 sm:px-4"
 >
-  <div class="w-full max-w-2xl flex flex-col items-center gap-2">
+  <div class="w-full max-w-3xl flex flex-col items-center gap-2">
     <nav
       id="nav-pill"
-      class="flex items-center gap-6 px-6 py-3 rounded-2xl border border-white/10 backdrop-blur-md bg-bg/75 transition-[background-color,border-color,box-shadow] duration-300"
+      class="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-3 sm:gap-4 lg:gap-5 px-4 sm:px-5 lg:px-6 py-2.5 sm:py-3 rounded-2xl border border-white/10 backdrop-blur-md bg-bg/75 transition-[background-color,border-color,box-shadow] duration-300"
     >
       <a
         href="#hero"
         aria-label="Inicio"
-        class="text-accent mr-2 hover:text-text transition-colors duration-200"
+        class="text-accent shrink-0 hover:text-text transition-colors duration-200"
       >
         <Logo class="w-7 h-7" />
       </a>
 
-      <div class="hidden sm:flex items-center gap-5">
+      <div class="hidden sm:flex items-center gap-3.5 lg:gap-5">
         {links.map((l) => (
           <a
             href={l.href}
             data-i18n={l.i18n}
-            class="text-sm text-muted hover:text-text transition-colors duration-200 font-medium"
+            class="text-sm text-muted hover:text-text transition-colors duration-200 font-medium whitespace-nowrap"
           >
             {l.label}
           </a>
         ))}
       </div>
 
-      <a
-        href={cvFile}
-        download="FrankRoldan_2026.pdf"
-        class="btn-reticle ml-2 text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
-      >
-        CV
-      </a>
+      <div class="hidden sm:flex items-center gap-2 shrink-0">
+        <a
+          href={cvFile}
+          download="FrankRoldan_2026.pdf"
+          class="btn-reticle text-xs font-mono px-3 py-1.5 rounded-lg border border-accent/40 text-accent hover:bg-accent/10 transition-colors duration-200"
+        >
+          CV
+        </a>
+
+        <a
+          href="/brutal"
+          aria-label="Ver versión alter ego brutalista del portfolio"
+          title="Alter ego: versión brutalista"
+          class="btn-reticle inline-flex items-center gap-1 text-xs font-mono px-2.5 lg:px-3 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors duration-200"
+        >
+          <span aria-hidden="true">▲</span>
+          <span class="hidden lg:inline">ALTER EGO</span>
+        </a>
+      </div>
 
       <!-- Language toggle -->
       <button
         id="lang-toggle"
         aria-label="Toggle language"
-        class="btn-reticle font-mono text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors duration-200"
+        class="btn-reticle shrink-0 font-mono text-xs px-2.5 py-1.5 rounded-lg border border-border text-muted hover:text-accent hover:border-accent/40 transition-colors duration-200"
       >
         EN
       </button>
@@ -62,7 +74,7 @@ const links = [
         id="menu-toggle"
         aria-label="Abrir menú"
         aria-expanded="false"
-        class="sm:hidden flex flex-col justify-center items-center w-8 h-8 gap-1.5 rounded-lg hover:bg-white/5 transition-colors duration-200"
+        class="sm:hidden shrink-0 flex flex-col justify-center items-center w-8 h-8 gap-1.5 rounded-lg hover:bg-white/5 transition-colors duration-200"
       >
         <span class="hamburger-line block w-5 h-0.5 bg-muted rounded-full transition-all duration-300"></span>
         <span class="hamburger-line block w-5 h-0.5 bg-muted rounded-full transition-all duration-300"></span>
@@ -86,6 +98,21 @@ const links = [
             {l.label}
           </a>
         ))}
+        <div class="flex items-center gap-3 pt-2 border-t border-white/10">
+          <a
+            href={cvFile}
+            download="FrankRoldan_2026.pdf"
+            class="mobile-nav-link text-sm text-accent hover:text-text transition-colors duration-200 font-medium"
+          >
+            Descargar CV
+          </a>
+          <a
+            href="/brutal"
+            class="mobile-nav-link text-sm text-muted hover:text-text transition-colors duration-200 font-medium ml-auto"
+          >
+            ALTER EGO ▲
+          </a>
+        </div>
       </div>
     </div>
   </div>

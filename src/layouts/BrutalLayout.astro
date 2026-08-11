@@ -1,0 +1,217 @@
+---
+import '../styles/brutal.css';
+import Logo from '../components/Logo.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Frank Roldan | Alter Ego — Brutalist Mode',
+  description = 'Portfolio de Frank Alessandro Roldan en clave brutalista — mismo contenido, otra piel.',
+} = Astro.props;
+
+const ogImage = new URL('/og-image.webp', Astro.site).toString();
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site).toString();
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content="noindex, follow" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Frank Roldan — Alter Ego" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={canonicalUrl} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script is:inline>history.scrollRestoration = 'manual'; window.scrollTo(0, 0);</script>
+    <script is:inline>
+      (function () {
+        const l = localStorage.getItem('lang') || 'es';
+        document.documentElement.classList.add('brutal', 'js-anim');
+        document.documentElement.dataset.lang = l;
+        document.documentElement.lang = l;
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+  </head>
+  <body>
+    <!-- Slam intro: a solid ink screen holds the name, then the whole panel
+         gets shoved offscreen like a rubber stamp being lifted. Pure GSAP,
+         no CSS-only entrance needed here since it's short and simple. -->
+    <div id="brutal-intro" aria-hidden="true">
+      <div class="brutal-intro-inner">
+        <span class="brutal-intro-word">FRANK</span>
+        <span class="brutal-intro-word brutal-intro-word--signal">ROLDAN</span>
+      </div>
+    </div>
+
+    <div
+      id="brutal-scroll-progress"
+      class="fixed top-0 left-0 w-0 z-9999 transition-[width] duration-80 ease-linear"
+    ></div>
+
+    <slot />
+
+    <button
+      id="brutal-back-to-top"
+      aria-label="Volver arriba"
+      class="stamp-btn stamp-btn--compact fixed bottom-6 right-6 z-50 px-3 py-2.5 text-xs opacity-0 pointer-events-none"
+    >
+      ↑ ARRIBA
+    </button>
+
+    <script>
+      import '../scripts/brutal-animations.ts';
+    </script>
+
+    <script>
+      const btt = document.getElementById('brutal-back-to-top');
+      function updateBtt() {
+        if (!btt) return;
+        if (window.scrollY > 300) {
+          btt.style.opacity = '1';
+          btt.style.pointerEvents = 'auto';
+        } else {
+          btt.style.opacity = '0';
+          btt.style.pointerEvents = 'none';
+        }
+      }
+      btt?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+      window.addEventListener('scroll', updateBtt, { passive: true });
+
+      const bar = document.getElementById('brutal-scroll-progress');
+      function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        if (bar) bar.style.width = pct + '%';
+      }
+      window.addEventListener('scroll', updateProgress, { passive: true });
+    </script>
+
+    <script>
+      // ── i18n + lang toggle — same dictionary/keys as the main site so the
+      // shared content in src/data/content.ts renders correctly in both langs.
+      interface Tr { es: string; en: string; }
+      type Lang = 'es' | 'en';
+
+      const T: Record<string, Tr> = {
+        'nav.home':       { es: 'Inicio',      en: 'Home' },
+        'nav.about':      { es: 'Sobre mí',    en: 'About' },
+        'nav.experience': { es: 'Experiencia', en: 'Experience' },
+        'nav.projects':   { es: 'Proyectos',   en: 'Projects' },
+        'nav.contact':    { es: 'Contacto',    en: 'Contact' },
+
+        'hero.available':    { es: 'Disponible para trabajar', en: 'Available for work' },
+        'hero.desc':         { es: 'Desarrollador Full Stack con más de 3 años de experiencia construyendo aplicaciones web escalables. Especializado en React, Node.js y APIs REST.', en: 'Full Stack Developer with 3+ years of experience building scalable web applications. Specialized in React, Node.js and REST APIs.' },
+        'hero.cta.projects': { es: 'Ver proyectos', en: 'View projects' },
+        'hero.cta.contact':  { es: 'Contacto',      en: 'Contact' },
+
+        'about.label': { es: 'Sobre mí',                    en: 'About me' },
+        'about.title': { es: 'Un poco de mi historia', en: 'A bit about my story' },
+
+        'contact.label': { es: 'Contacto', en: 'Contact' },
+        'contact.title': { es: 'Hablemos', en: "Let's talk" },
+        'contact.desc':  { es: 'Si tienes un proyecto en mente, una pregunta o simplemente quieres conectar — envíame un mensaje.', en: "If you have a project in mind, a question, or just want to connect — send me a message." },
+
+        'exp.label': { es: 'Experiencia',         en: 'Experience' },
+        'exp.title': { es: 'Dónde he trabajado',  en: "Where I've worked" },
+
+        'projects.label': { es: 'Proyectos',            en: 'Projects' },
+        'projects.title': { es: 'Trabajo seleccionado', en: 'Selected work' },
+        'projects.sub':   { es: 'Proyectos personales, diseñados y construidos de principio a fin.', en: 'Personal projects, designed and built end to end.' },
+      };
+
+      function applyLang(lang: Lang) {
+        document.documentElement.dataset.lang = lang;
+        document.documentElement.lang = lang;
+        localStorage.setItem('lang', lang);
+        document.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
+          const entry = T[el.dataset.i18n!];
+          if (entry) el.textContent = entry[lang];
+        });
+        document.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
+          const entry = T[el.dataset.i18nHtml!];
+          if (entry) el.innerHTML = entry[lang];
+        });
+        const btn = document.getElementById('brutal-lang-toggle');
+        if (btn) btn.textContent = lang === 'es' ? 'EN' : 'ES';
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const lang = (localStorage.getItem('lang') || 'es') as Lang;
+        applyLang(lang);
+        document.getElementById('brutal-lang-toggle')?.addEventListener('click', () => {
+          applyLang(document.documentElement.dataset.lang === 'es' ? 'en' : 'es');
+        });
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  #brutal-intro {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-ink);
+    overflow: hidden;
+  }
+  html.brutal:not(.js-anim) #brutal-intro {
+    display: none;
+  }
+  .brutal-intro-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    line-height: 0.85;
+  }
+  .brutal-intro-word {
+    font-family: var(--font-display);
+    color: var(--color-paper);
+    font-size: clamp(3rem, 14vw, 9rem);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+  .brutal-intro-word--signal {
+    color: var(--color-signal);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #brutal-intro { display: none; }
+  }
+</style>
